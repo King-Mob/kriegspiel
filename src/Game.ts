@@ -53,7 +53,7 @@ export const aiConfig = {
     return result;
   },
   playoutDepth: 5,
-  iterations: 10,
+  iterations: 100,
   objectScores: (G: GameState, ctx: Ctx, playerID:string) => {
     const cPlayer = playerID as P_ID
     /* if (G.moveRecords[cPlayer].length >= 5) {
