@@ -9,15 +9,15 @@ const KriegspielClient = Client({
   board: Board,
   debug: {collapseOnLoad:true},
   /* multiplayer: //SocketIO({ server: 'localhost:8000' })
-  Local(
-    //{ bots:{ '1': RandomBot }}
-  ), */
+  Local(*/
+  bots:{ '1': RandomBot }
+  ), 
 });
 
 const App = () => (
   <div>
     <h1>Guy Debord's Kriegspiel</h1>
-    <KriegspielClient /* playerID="0" */ />
+    <KriegspielClient playerID="0" />
    {/* <KriegspielClient playerID="1" /> */}
   </div>
 );
