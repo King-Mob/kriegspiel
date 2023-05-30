@@ -11,7 +11,7 @@ const KriegspielClient = Client({
   /* multiplayer: //SocketIO({ server: 'localhost:8000' })
   Local(*/
   bots:{ '1': RandomBot }
-  ), 
+
 });
 
 const App = () => (
