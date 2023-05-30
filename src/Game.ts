@@ -70,10 +70,10 @@ export const aiConfig = {
     const cRelDef = totalRelDef(G, cPlayer)
     const opRelDef = totalRelDef(G, opPlayer)
     return {
-      /* stillInSupply: {
+      stillInSupply: {
         weight: 100,
         checker: (G: any, ctx: Ctx) => { return !checkNoSupply(G, ctx.currentPlayer as P_ID) }
-      }, */
+      }, 
       moreControlArea: {
         weight: 10,
         checker: (G: any, ctx: Ctx) => {
