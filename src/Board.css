@@ -1,21 +1,16 @@
-
-
 /* 
 #infoBody
 {
   float: left;
   width: 20%;
 } */
-#boardBody{
+#boardBody {
   width: 50%;
 }
-
-
 
 rect.active {
   cursor: pointer;
   fill: #eeffe9;
-  
 }
 
 rect.active:hover {
@@ -24,17 +19,17 @@ rect.active:hover {
 
 rect.highlight {
   cursor: pointer;
-  fill: #FF004D;
+  fill: #ff004d;
 }
 
 circle.piece0 {
-  
-  
-  fill: #29ADFF;
-  
+  fill: #29adff;
 }
+
 circle.piece1 {
-  
-  fill: #FFA300;
-  
+  fill: #ffa300;
+}
+
+.player-units {
+  cursor: points;
 }

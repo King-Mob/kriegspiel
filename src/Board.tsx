@@ -1,6 +1,6 @@
-import React, { useRef, useState } from 'react';
-import { BoardProps } from 'boardgame.io/react';
-import * as Game from './Game';
+import React, { useRef, useState } from "react";
+import { BoardProps } from "boardgame.io/react";
+import * as Game from "./Game";
 import {
   objTypeList,
   strongholdTypeList,
@@ -19,21 +19,30 @@ import {
   getDirSuppliedLines,
   getSuppliedCells,
   exportGame,
-} from './Game';
+} from "./Game";
 
-import { useGesture } from '@use-gesture/react';
+import { useGesture } from "@use-gesture/react";
 
 interface GameProps extends BoardProps<GameState> {}
 
-
-
-export const Board = ({ G, ctx, moves, isActive, events, ...props }: GameProps) => {
-  const myID = (props.playerID !== null ? props.playerID : ctx.currentPlayer) as P_ID;
+export const Board = ({
+  G,
+  ctx,
+  moves,
+  isActive,
+  events,
+  ...props
+}: GameProps) => {
+  const myID = (
+    props.playerID !== null ? props.playerID : ctx.currentPlayer
+  ) as P_ID;
   const opponentID = dualPlayerID(myID);
+  //const [currentPlayer, setCurrentPlayer] = useState<P_ID>("0");
   const currentPlayer = ctx.currentPlayer as P_ID;
+  //const currentPlayer = props.playerID;
   const [pickedID, pickUpID] = useState<CellID | null>(null);
-  const editMode = ctx.activePlayers?.[myID] === 'edition';
-  const opEditMode = ctx.activePlayers?.[opponentID] === 'edition';
+  const editMode = ctx.activePlayers?.[myID] === "edition";
+  const opEditMode = ctx.activePlayers?.[opponentID] === "edition";
   const [turfMode, setTurfMode] = useState(false);
 
   function pickedData(pId: CellID | null) {
@@ -48,13 +57,17 @@ export const Board = ({ G, ctx, moves, isActive, events, ...props }: GameProps) 
     if (editMode) {
       if (editState !== null) {
         if (editState < 6) {
-          const obj = G.cells[id] ? null : Game.newPiece(objTypeList[editState], editFiction);
+          const obj = G.cells[id]
+            ? null
+            : Game.newPiece(objTypeList[editState], editFiction);
           moves.editCells(id, obj);
         } else {
           const state = editState - 6;
           //only arsenal has fiction
           const fiction = state ? null : editFiction;
-          const str = G.places[id] ? null : Game.newStronghold(strongholdTypeList[state], fiction);
+          const str = G.places[id]
+            ? null
+            : Game.newStronghold(strongholdTypeList[state], fiction);
           moves.editPlaces(id, str);
         }
       }
@@ -83,7 +96,12 @@ export const Board = ({ G, ctx, moves, isActive, events, ...props }: GameProps) 
 
   function isAvailable(id: CellID) {
     if (!isActive) return false;
-    else if (pickedID !== null && pickedData(pickedID) !== null && canPut(G, ctx, pickedID, id)) return true;
+    else if (
+      pickedID !== null &&
+      pickedData(pickedID) !== null &&
+      canPut(G, ctx, pickedID, id)
+    )
+      return true;
   }
 
   function getCellColor(id: CellID) {
@@ -96,9 +114,11 @@ export const Board = ({ G, ctx, moves, isActive, events, ...props }: GameProps) 
         getSuppliedCells(
           {
             ...G,
-            cells: G.cells.map((obj, CId) => (CId === pickedID ? null : CId === id ? pickedData(pickedID) : obj)),
+            cells: G.cells.map((obj, CId) =>
+              CId === pickedID ? null : CId === id ? pickedData(pickedID) : obj
+            ),
           },
-          currentPlayer,
+          currentPlayer
         ).includes(id)
       ) {
         return pico8Palette.green;
@@ -107,12 +127,14 @@ export const Board = ({ G, ctx, moves, isActive, events, ...props }: GameProps) 
       }
     } else if (turfMode) {
       return pico8Palette.white;
-    } else if (typeof strongholdColor === 'string') {
+    } else if (typeof strongholdColor === "string") {
       return fictionColor(strongholdColor);
     } else {
       const pos = CId2Pos(id);
       const colorCase = (pos.x + pos.y) % 2 === 0;
-      return colorCase ? pico8Palette.light_grey : pico8Palette.white;
+      return colorCase //pico8Palette.light_grey
+        ? pico8Palette.very_light_grey
+        : pico8Palette.white;
     }
   }
 
@@ -122,7 +144,14 @@ export const Board = ({ G, ctx, moves, isActive, events, ...props }: GameProps) 
       const control = area.control;
       return (
         relDef >= 0 &&
-        control === belong && <rect width="1" height="1" fillOpacity={(relDef + 5) / 50} fill={fictionColor(belong)} />
+        control === belong && (
+          <rect
+            width="1"
+            height="1"
+            fillOpacity={(relDef + 5) / 50}
+            fill={fictionColor(belong)}
+          />
+        )
       );
     }, G.controlArea);
   }
@@ -137,11 +166,31 @@ export const Board = ({ G, ctx, moves, isActive, events, ...props }: GameProps) 
       //show the detailed info for selected cell, otherwise only cell in danger
 
       let result = offLst
-        .map((id) => gTranslate(renderStr('⚔️', 0.4), CId2Pos(id).x - 0.3, CId2Pos(id).y - 0.3))
-        .concat(defLst.map((id) => gTranslate(renderStr('🛡️', 0.4), CId2Pos(id).x - 0.3, CId2Pos(id).y - 0.3)));
+        .map((id) =>
+          gTranslate(
+            renderStr("⚔️", 0.4),
+            CId2Pos(id).x - 0.3,
+            CId2Pos(id).y - 0.3
+          )
+        )
+        .concat(
+          defLst.map((id) =>
+            gTranslate(
+              renderStr("🛡️", 0.4),
+              CId2Pos(id).x - 0.3,
+              CId2Pos(id).y - 0.3
+            )
+          )
+        );
       if (obj.supplied) {
         result = result.concat(
-          fireRange.map((id) => gTranslate(renderStr('🎯', 0.3), CId2Pos(id).x + 0.3, CId2Pos(id).y + 0.3)),
+          fireRange.map((id) =>
+            gTranslate(
+              renderStr("🎯", 0.3),
+              CId2Pos(id).x + 0.3,
+              CId2Pos(id).y + 0.3
+            )
+          )
         );
       }
 
@@ -153,17 +202,33 @@ export const Board = ({ G, ctx, moves, isActive, events, ...props }: GameProps) 
     if (obj) {
       const relDef = G.controlArea[CId][obj.belong];
       return (
-        obj && relDef < 0 && gTranslate(renderStr(defState(relDef), 0.4), CId2Pos(CId).x + 0.3, CId2Pos(CId).y - 0.3)
+        obj &&
+        relDef < 0 &&
+        gTranslate(
+          renderStr(defState(relDef), 0.4),
+          CId2Pos(CId).x + 0.3,
+          CId2Pos(CId).y - 0.3
+        )
       );
     }
   }
 
   function drawOneSupplyLine(line: CellID[], pId: P_ID) {
     {
-      const offset = pId === '0' ? -0.05 : 0.05;
+      const offset = pId === "0" ? -0.05 : 0.05;
       return (
         line.length > 1 &&
-        gTranslate(drawLine(line[0], line[line.length - 1], fictionColor(pId), 0.05, '0.4, 0.1'), offset, offset)
+        gTranslate(
+          drawLine(
+            line[0],
+            line[line.length - 1],
+            fictionColor(pId),
+            0.05,
+            "0.4, 0.1"
+          ),
+          offset,
+          offset
+        )
       );
     }
   }
@@ -175,7 +240,9 @@ export const Board = ({ G, ctx, moves, isActive, events, ...props }: GameProps) 
 
   function drawAllSupplyLines(pId: P_ID) {
     //get all supply lines groups from different points
-    return getDirSuppliedLines(G, pId)[1].flatMap((lines) => draw8DirSupplyLines(lines, pId));
+    return getDirSuppliedLines(G, pId)[1].flatMap((lines) =>
+      draw8DirSupplyLines(lines, pId)
+    );
   }
 
   const boardRef = useRef(null);
@@ -215,17 +282,22 @@ export const Board = ({ G, ctx, moves, isActive, events, ...props }: GameProps) 
     {
       target: boardRef,
       eventOptions: { passive: false },
-    },
+    }
   );
 
   //render Main board
 
   const gameBoard = (
-    <svg viewBox={`-0.6 -0.6 ${BoardSize.mx + 1.2} ${BoardSize.my + 1.2}`} ref={boardRef}>
+    <svg
+      viewBox={`-0.6 -0.6 ${BoardSize.mx + 1.2} ${BoardSize.my + 1.2}`}
+      ref={boardRef}
+    >
       <g
-        transform={`translate(${BoardSize.mx / 2} ${BoardSize.my / 2})  scale(${mapScale}) translate(${
-          mapPos.x - BoardSize.mx / 2
-        } ${mapPos.y - BoardSize.my / 2})`}
+        transform={`translate(${BoardSize.mx / 2} ${
+          BoardSize.my / 2
+        })  scale(${mapScale}) translate(${mapPos.x - BoardSize.mx / 2} ${
+          mapPos.y - BoardSize.my / 2
+        })`}
       >
         <rect
           x={-0.6}
@@ -243,13 +315,27 @@ export const Board = ({ G, ctx, moves, isActive, events, ...props }: GameProps) 
           .map((_, id) => gTranslate(renderStr((id + 1).toString()), id, -0.8))}
         {Array(BoardSize.my)
           .fill(null)
-          .map((_, id) => gTranslate(renderStr(String.fromCharCode(65 + id)), -0.8, id))}
+          .map((_, id) =>
+            gTranslate(renderStr(String.fromCharCode(65 + id)), -0.8, id)
+          )}
         {Array(BoardSize.mx)
           .fill(null)
-          .map((_, id) => gTranslate(renderStr((id + 1).toString()), id, BoardSize.my - 1 + 0.8))}
+          .map((_, id) =>
+            gTranslate(
+              renderStr((id + 1).toString()),
+              id,
+              BoardSize.my - 1 + 0.8
+            )
+          )}
         {Array(BoardSize.my)
           .fill(null)
-          .map((_, id) => gTranslate(renderStr(String.fromCharCode(65 + id)), BoardSize.mx - 1 + 0.8, id))}
+          .map((_, id) =>
+            gTranslate(
+              renderStr(String.fromCharCode(65 + id)),
+              BoardSize.mx - 1 + 0.8,
+              id
+            )
+          )}
         {/* cells */}
         {renderLayer((_, id) => (
           <rect
@@ -273,33 +359,44 @@ export const Board = ({ G, ctx, moves, isActive, events, ...props }: GameProps) 
 
         {/* supply line */}
 
-        {drawAllSupplyLines('0')}
-        {drawAllSupplyLines('1')}
+        {drawAllSupplyLines("0")}
+        {drawAllSupplyLines("1")}
+        {drawAllSupplyLines("2")}
 
         {/* stronghold */}
         {renderLayer(
           (stronghold) => (
             <>{stronghold && renderStr(stronghold.placeRender, 1)}</>
           ),
-          G.places,
+          G.places
         )}
         {/* show effected turf */}
-        {turfMode && renderEffectedTurf('0').concat(renderEffectedTurf('1'))}
+        {turfMode && renderEffectedTurf("0").concat(renderEffectedTurf("1"))}
 
         {/* move indication */}
-        {G.moveRecords['0'].map(([st, ed]) => drawLine(st, ed, pico8Palette.dark_blue, 0.5, '0.3, 0.1'))}
-        {G.moveRecords['1'].map(([st, ed]) => drawLine(st, ed, pico8Palette.brown, 0.5, '0.3, 0.1'))}
+        {G.moveRecords["0"].map(([st, ed]) =>
+          drawLine(st, ed, pico8Palette.dark_blue, 0.5, "0.3, 0.1")
+        )}
+        {G.moveRecords["1"].map(([st, ed]) =>
+          drawLine(st, ed, pico8Palette.brown, 0.5, "0.3, 0.1")
+        )}
 
         {/* piece */}
         {renderLayer(
           (obj) => (
             <>{obj && renderPiece(obj)}</>
           ),
-          G.cells,
+          G.cells
         )}
         {/* attack */}
-        {[G.attackRecords['0'], G.attackRecords['1']].map(
-          (atk) => atk !== null && gTranslate(renderStr('💥', 0.7), CId2Pos(atk[0]).x, CId2Pos(atk[0]).y),
+        {[G.attackRecords["0"], G.attackRecords["1"]].map(
+          (atk) =>
+            atk !== null &&
+            gTranslate(
+              renderStr("💥", 0.7),
+              CId2Pos(atk[0]).x,
+              CId2Pos(atk[0]).y
+            )
         )}
         {/* charge */}
         {renderLayer(
@@ -308,21 +405,31 @@ export const Board = ({ G, ctx, moves, isActive, events, ...props }: GameProps) 
               {obj &&
                 getChargedCavalries(G, id).map((chargeRow) =>
                   chargeRow.map((pos, id, row) =>
-                    gTranslate(renderStr('⚡'), pos.x - 0.5 * row[0].x, pos.y - 0.5 * row[0].y),
-                  ),
+                    gTranslate(
+                      renderStr("⚡"),
+                      pos.x - 0.5 * row[0].x,
+                      pos.y - 0.5 * row[0].y
+                    )
+                  )
                 )}
             </>
           ),
-          G.cells,
+          G.cells
         )}
         {/* battle info indication */}
-        {pickedID!==null&&renderCombatEffect(pickedID)}
+        {pickedID !== null && renderCombatEffect(pickedID)}
         {G.cells.map((_, id) => (
           <>{renderCombatResult(id)}</>
         ))}
         {/* control */}
         {renderLayer((_, id) => (
-          <rect cursor="pointer" onClick={() => myOnClick(id)} width="1" height="1" fillOpacity="0" />
+          <rect
+            cursor="pointer"
+            onClick={() => myOnClick(id)}
+            width="1"
+            height="1"
+            fillOpacity="0"
+          />
         ))}
       </g>
     </svg>
@@ -360,7 +467,7 @@ export const Board = ({ G, ctx, moves, isActive, events, ...props }: GameProps) 
     );
 
     return (
-      <table style={{ marginLeft: 'auto', marginRight: 'auto' }}>
+      <table style={{ marginLeft: "auto", marginRight: "auto" }}>
         {obj?.belong !== opponentID ? (
           // if choose my unit or empty place
           <tr>
@@ -379,57 +486,82 @@ export const Board = ({ G, ctx, moves, isActive, events, ...props }: GameProps) 
     );
   }
   function offState(n: number) {
-    if (n > 0) return '⚔️';
-    else return '';
+    if (n > 0) return "⚔️";
+    else return "";
   }
   function defState(n: number) {
-    if (n >= 0) return '🛡️';
-    else if (n === -1) return '🏃‍♂️';
-    else return '💀';
+    if (n >= 0) return "🛡️";
+    else if (n === -1) return "🏃‍♂️";
+    else return "💀";
   }
   function overAllUnits(belong: P_ID) {
     return spanBGColor(
       <>
         {objTypeList.map((type) => {
-          const num = Game.filterCId(G.cells, (obj) => obj.typeName === type && obj.belong === belong).length;
+          const num = Game.filterCId(
+            G.cells,
+            (obj) => obj.typeName === type && obj.belong === belong
+          ).length;
           return Game.objDataList[type].objRender + num;
         })}
       </>,
-      fictionColor(belong),
+      fictionColor(belong)
     );
   }
+  console.log(G, ctx);
 
   const sideBarPlay = (
     <div id="PlayUI">
       {/* how many units left */}
 
       <p>
-        <label>Over All:</label>
+        <label>Players:</label>
 
         <div
-          onClick={() => {
+        /*  onClick={() => {
             setTurfMode(!turfMode);
           }}
-          style={{ cursor: 'pointer' }}
+          style={{ cursor: "pointer" }}*/
         >
-          {overAllUnits(myID)}
-          <br />
-          {overAllUnits(opponentID)}
+          {G.players.map((player) => (
+            <div
+              className="player-units"
+              style={{ cursor: "pointer" }}
+              onClick={() => {
+                events.endTurn && events.endTurn({ next: player.id });
+              }}
+            >
+              {player.name}
+              {overAllUnits(player.id)}
+              Allies:
+              {G.alliances[player.id].map((allyID) =>
+                spanBGColor(<>🕊️</>, fictionColor(allyID))
+              )}
+              <br />
+            </div>
+          ))}
         </div>
-        <label>(click to toggle Turf View)</label>
+        {/*<label>(click to toggle Turf View)</label>*/}
+        <label>Select active player</label>
       </p>
 
       {/* turn info */}
       <p>
-        {spanBGColor(<>It is {currentPlayer === myID ? 'my' : "opponent's"} turn. </>, fictionColor(currentPlayer))}
-        <button
+        {spanBGColor(
+          <>
+            It is {G.players.find((p) => p.id === currentPlayer)?.name + "'s"}{" "}
+            turn.{" "}
+          </>,
+          fictionColor(currentPlayer)
+        )}
+        {/* <button
           disabled={!isActive}
           onClick={() => {
-              events.endTurn && events.endTurn();            
+            events.endTurn && events.endTurn();
           }}
         >
           End Turn
-        </button>
+        </button> */}
       </p>
       <p>{getWinner()}</p>
 
@@ -453,14 +585,23 @@ export const Board = ({ G, ctx, moves, isActive, events, ...props }: GameProps) 
                   strokeWidth="0.05"
                 />
 
-                {edObj ? renderPiece(edObj) : atk ? renderStr('❌') : null}
+                {edObj ? renderPiece(edObj) : atk ? renderStr("❌") : null}
               </>
             );
           } else {
             return (
               <>
-                <rect width="1" height="1" fill={pico8Palette.red} stroke={pico8Palette.dark_grey} strokeWidth="0.05" />
-                {atk && (atk[1] === 'Arsenal' ? renderStr('🎪') : renderPiece(atk[1]))}
+                <rect
+                  width="1"
+                  height="1"
+                  fill={pico8Palette.red}
+                  stroke={pico8Palette.dark_grey}
+                  strokeWidth="0.05"
+                />
+                {atk &&
+                  (atk[1] === "Arsenal"
+                    ? renderStr("🎪")
+                    : renderPiece(atk[1]))}
               </>
             );
           }
@@ -468,12 +609,14 @@ export const Board = ({ G, ctx, moves, isActive, events, ...props }: GameProps) 
       </svg>
       <label>(click to undo)</label>
       {/* retreat info */}
-      {G.forcedRetreat[currentPlayer][0] !== null && <p>🏃‍♂️💥 I must retreat my unit from attack first.</p>}
+      {G.forcedRetreat[currentPlayer][0] !== null && (
+        <p>🏃‍♂️💥 I must retreat my unit from attack first.</p>
+      )}
 
       {/* chosen piece info */}
 
       <p>
-        Chosen Unit{' '}
+        Chosen Unit{" "}
         {pickedID !== null &&
           ((id) => {
             const obj = G.cells[id];
@@ -482,20 +625,23 @@ export const Board = ({ G, ctx, moves, isActive, events, ...props }: GameProps) 
 
             return (
               <>
-                {' '}
+                {" "}
                 at {pos.x + 1}
-                {String.fromCharCode(65 + pos.y)}:{' '}
+                {String.fromCharCode(65 + pos.y)}:{" "}
                 {obj && (
                   <>
                     {spanBGColor(
                       <>
                         {obj.objRender + obj.typeName},<br />
-                        <span title="Attack">⚔️: {obj.objType === 'Cavalry' ? '4(+3)' : obj.offense} </span>
+                        <span title="Attack">
+                          ⚔️:{" "}
+                          {obj.objType === "Cavalry" ? "4(+3)" : obj.offense}{" "}
+                        </span>
                         <span title="Defense">🛡️: {obj.defense} </span>
                         <span title="Range">🎯: {obj.range} </span>
                         <span title="Speed">🐴: {obj.speed} </span>
                       </>,
-                      fictionColor(obj.belong),
+                      fictionColor(obj.belong)
                     )}
                     <br />
                     <button
@@ -517,14 +663,18 @@ export const Board = ({ G, ctx, moves, isActive, events, ...props }: GameProps) 
                         {str.placeRender + str.placeType}
                         {str.defenseAdd > 0 ? (
                           <>
-                            , <span title="Additional Defense"> 🛡️+: {str.defenseAdd} </span>{' '}
+                            ,{" "}
+                            <span title="Additional Defense">
+                              {" "}
+                              🛡️+: {str.defenseAdd}{" "}
+                            </span>{" "}
                           </>
                         ) : (
-                          ''
+                          ""
                         )}
                       </>,
-                      str.belong ? fictionColor(str.belong) : '',
-                    )}{' '}
+                      str.belong ? fictionColor(str.belong) : ""
+                    )}{" "}
                   </>
                 )}
               </>
@@ -538,7 +688,7 @@ export const Board = ({ G, ctx, moves, isActive, events, ...props }: GameProps) 
     </div>
   );
   // editor
-  const [gameData, setGameData] = useState<string>('');
+  const [gameData, setGameData] = useState<string>("");
   const [editState, setEditState] = useState<CellID | null>(null);
   const [editFiction, setEditFiction] = useState<P_ID>(myID);
 
@@ -581,11 +731,18 @@ export const Board = ({ G, ctx, moves, isActive, events, ...props }: GameProps) 
       {/* Editor */}
       <div>
         <svg viewBox="-0.1 -0.2 6.2 2.2">
-          {renderLayer((type, id) => editorCells(id, Game.objDataList[type].objRender), objTypeList)}
+          {renderLayer(
+            (type, id) => editorCells(id, Game.objDataList[type].objRender),
+            objTypeList
+          )}
           {gTranslate(
-            renderLayer((type, oid) => editorCells(oid + 6, Game.renderPlaceByType(type)[0]), strongholdTypeList),
+            renderLayer(
+              (type, oid) =>
+                editorCells(oid + 6, Game.renderPlaceByType(type)[0]),
+              strongholdTypeList
+            ),
             0,
-            1,
+            1
           )}
         </svg>
         <input
@@ -595,7 +752,11 @@ export const Board = ({ G, ctx, moves, isActive, events, ...props }: GameProps) 
             setEditFiction(dualPlayerID(editFiction));
           }}
         />
-        <input type="button" value="Reset Board" onClick={() => moves.load(Game.onlyMap)} />
+        <input
+          type="button"
+          value="Reset Board"
+          onClick={() => moves.load(Game.onlyMap)}
+        />
       </div>
       {/* Game Data */}
       <form>
@@ -611,20 +772,34 @@ export const Board = ({ G, ctx, moves, isActive, events, ...props }: GameProps) 
           name="gameData"
           id="gameData"
           rows={10}
-          style={{ width: '90%', height: '60%', resize: 'vertical' }}
+          style={{ width: "90%", height: "60%", resize: "vertical" }}
           value={gameData}
           onChange={(e) => setGameData(e.target.value)}
         ></textarea>
 
-        <input type="button" value="Export Game" onClick={() => setGameData(exportGame(G))} />
-        <input type="button" value="Load Game" onClick={() => moves.load(gameData)} />
-        <input type="button" value="Merge Game" onClick={() => moves.merge(gameData)} />
+        <input
+          type="button"
+          value="Export Game"
+          onClick={() => setGameData(exportGame(G))}
+        />
+        <input
+          type="button"
+          value="Load Game"
+          onClick={() => moves.load(gameData)}
+        />
+        <input
+          type="button"
+          value="Merge Game"
+          onClick={() => moves.merge(gameData)}
+        />
         <input
           type="button"
           value="Copy Data"
           onClick={() => {
             // Get the text field
-            const copyText = document.getElementById('gameData') as HTMLInputElement;
+            const copyText = document.getElementById(
+              "gameData"
+            ) as HTMLInputElement;
             // Select the text field
             copyText.select();
             copyText.setSelectionRange(0, 99999); // For mobile devices
@@ -632,7 +807,11 @@ export const Board = ({ G, ctx, moves, isActive, events, ...props }: GameProps) 
             navigator.clipboard.writeText(gameData);
           }}
         />
-        <input type="button" value="Remove Data" onClick={() => setGameData('')} />
+        <input
+          type="button"
+          value="Remove Data"
+          onClick={() => setGameData("")}
+        />
       </form>
     </div>
   );
@@ -640,7 +819,7 @@ export const Board = ({ G, ctx, moves, isActive, events, ...props }: GameProps) 
   //get winner
   function getWinner() {
     if (ctx.gameover) {
-      const result = ctx.gameover.winner === '0' ? 'Blue' : 'Orange';
+      const result = ctx.gameover.winner === "0" ? "Blue" : "Orange";
       return `The winner is ${result} Player`;
     } else {
       return null;
@@ -650,77 +829,75 @@ export const Board = ({ G, ctx, moves, isActive, events, ...props }: GameProps) 
 
   // render all
 
-  
-    return (
-      <main>
+  return (
+    <main>
+      <div
+        style={{
+          height: "auto",
+          color: "black",
+          textAlign: "center",
+          fontFamily: "'Lato', sans-serif",
+          display: "flex",
+          flexWrap: "wrap",
+        }}
+      >
         <div
           style={{
-            height: 'auto',
-            color: 'black',
-            textAlign: 'center',
-            fontFamily: "'Lato', sans-serif",
-            display: 'flex',
-            flexWrap: 'wrap',
+            maxHeight: "100vh",
+            minWidth: "55vw",
+            flex: "4",
+            maxWidth: "122vh",
+            border: `2px solid ${pico8Palette.dark_green}`,
+            backgroundColor: `${pico8Palette.white}`,
+            touchAction: "none",
           }}
         >
-          <div
-            style={{
-              maxHeight: '100vh',
-              minWidth: '55vw',
-              flex: '4',
-              maxWidth: '122vh',
-              border: `2px solid ${pico8Palette.dark_green}`,
-              backgroundColor: `${pico8Palette.white}`,
-              touchAction: 'none',
-            }}
-          >
-            {/* svg Game Board */}
-            {gameBoard}
-          </div>
-
-          {/* info UI */}
-          <div
-            style={{
-              minWidth: '250px',
-              flex: '1',
-              maxWidth: '100vw',
-              border: `2px solid ${pico8Palette.dark_green}`,
-              backgroundColor: `${pico8Palette.white}`,
-            }}
-          >
-            {editMode ? sideBarEdit : sideBarPlay}
-
-            <p>
-              {opEditMode && (
-                <>
-                  Other player is editing.
-                  <br />
-                </>
-              )}
-              More information <a href="https://github.com/iamcxds/kriegspiel">here</a>.{' '}
-              <input
-                type="button"
-                value="Edit Mode"
-                onClick={() => {
-                  if (!editMode) {
-                    
-                    events.setStage&&events.setStage('edition');
-                    
-                  } else {
-                    events.endStage&&events.endStage();
-                  }
-                }}
-              />
-            </p>
-          </div>
+          {/* svg Game Board */}
+          {gameBoard}
         </div>
-      </main>
-    );
-  };
+
+        {/* info UI */}
+        <div
+          style={{
+            minWidth: "250px",
+            flex: "1",
+            maxWidth: "100vw",
+            border: `2px solid ${pico8Palette.dark_green}`,
+            backgroundColor: `${pico8Palette.white}`,
+          }}
+        >
+          {editMode ? sideBarEdit : sideBarPlay}
+
+          <p>
+            {opEditMode && (
+              <>
+                Other player is editing.
+                <br />
+              </>
+            )}
+            More information{" "}
+            <a href="https://github.com/iamcxds/kriegspiel">here</a>.{" "}
+            <input
+              type="button"
+              value="Edit Mode"
+              onClick={() => {
+                if (!editMode) {
+                  events.setStage && events.setStage("edition");
+                } else {
+                  events.endStage && events.endStage();
+                }
+              }}
+            />
+          </p>
+        </div>
+      </div>
+    </main>
+  );
+};
 
 function renderLayer<T>(
   objRender: (a: T, b: CellID) => React.ReactNode,
-  objLst: readonly T[] = Array(BoardSize.mx * BoardSize.my).fill(null),
+  objLst: readonly T[] = Array(BoardSize.mx * BoardSize.my).fill(null)
 ) {
   return objLst.map((obj, id) => {
     const pos = CId2Pos(id);
@@ -741,14 +918,20 @@ function renderPiece(obj: ObjInstance) {
         />
       }
       {renderStr(obj.objRender)}
-      {!obj.supplied && renderStr('😅', 0.4)}
-      {obj.retreating && renderStr('🏃‍♂️', 0.4)}
+      {!obj.supplied && renderStr("😅", 0.4)}
+      {obj.retreating && renderStr("🏃‍♂️", 0.4)}
     </>
   );
 }
 function renderStr(str: string, size: number = 0.5) {
   return (
-    <text fontSize={`${size}`} x="0.5" y="0.5" dominantBaseline="middle" textAnchor="middle">
+    <text
+      fontSize={`${size}`}
+      x="0.5"
+      y="0.5"
+      dominantBaseline="middle"
+      textAnchor="middle"
+    >
       {str}
     </text>
   );
@@ -758,7 +941,13 @@ function gTranslate(jsx: React.ReactNode, x = 0, y = 0) {
   return <g transform={`translate(${x} ${y})`}>{jsx}</g>;
 }
 
-function drawLine(stCId: CellID, edCId: CellID, color: string = 'black', width: number = 0.1, dash: string = '') {
+function drawLine(
+  stCId: CellID,
+  edCId: CellID,
+  color: string = "black",
+  width: number = 0.1,
+  dash: string = ""
+) {
   const stPos = CId2Pos(stCId);
   const edPos = CId2Pos(edCId);
   return (
@@ -775,33 +964,38 @@ function drawLine(stCId: CellID, edCId: CellID, color: string = 'black', width: 
 }
 
 function spanBGColor(jsx: React.ReactNode, color: string) {
-  return <span style={{ backgroundColor: color, whiteSpace: 'normal' }}>{jsx}</span>;
+  return (
+    <span style={{ backgroundColor: color, whiteSpace: "normal" }}>{jsx}</span>
+  );
 }
 
 function fictionColor(pID: P_ID) {
   switch (pID) {
-    case '0':
+    case "0":
       return pico8Palette.blue;
-    case '1':
+    case "1":
       return pico8Palette.orange;
+    case "2":
+      return pico8Palette.pink;
   }
 }
 
 const pico8Palette = {
-  black: '#00000',
-  dark_blue: '#1d2b53',
-  dark_purple: '#7e2553',
-  dark_green: '#008751',
-  brown: '#ab5236',
-  dark_grey: '#5f574f',
-  light_grey: '#c2c3c7',
-  white: '#fff1e8',
-  red: '#ff004d',
-  orange: '#ffa300',
-  yellow: '#ffec27',
-  green: '#00e436',
-  blue: '#29adff',
-  lavender: '#83769c',
-  pink: '#ff77a8',
-  light_peach: '#ffccaa',
+  black: "#00000",
+  dark_blue: "#1d2b53",
+  dark_purple: "#7e2553",
+  dark_green: "#008751",
+  brown: "#ab5236",
+  dark_grey: "#5f574f",
+  light_grey: "#c2c3c7",
+  very_light_grey: "#e3e3e3",
+  white: "#fff1e8",
+  red: "#ff004d",
+  orange: "#ffa300",
+  yellow: "#ffec27",
+  green: "#00e436",
+  blue: "#29adff",
+  lavender: "#83769c",
+  pink: "#ff77a8",
+  light_peach: "#ffccaa",
 };

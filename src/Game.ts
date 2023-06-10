@@ -1,47 +1,58 @@
-import { Ctx, Game } from 'boardgame.io';
-import { INVALID_MOVE } from 'boardgame.io/core';
+import { Ctx, Game } from "boardgame.io";
+import { INVALID_MOVE } from "boardgame.io/core";
 
-export type P_ID = '0' | '1';
+export type P_ID = "0" | "1" | "2";
 
 export type CellID = number;
 
 export interface GameState {
+  players: { id: P_ID; name: string }[];
+  alliances: { [key in P_ID]: P_ID[] };
   cells: (ObjInstance | null)[];
   places: (Stronghold | null)[];
   inSupply: { [key in P_ID]: CellID[] };
   moveRecords: { [key in P_ID]: [CellID, CellID][] }; //(stCId,edCId)
-  attackRecords: { [key in P_ID]: [CellID, ObjInstance | 'Arsenal'] | null };
+  attackRecords: { [key in P_ID]: [CellID, ObjInstance | "Arsenal"] | null };
   forcedRetreat: { [key in P_ID]: [CellID | null, CellID | null] }; //the start and end of retreat CId,
-  controlArea: { control: P_ID; '0': number; '1': number }[]; //control player, reldef of players
+  controlArea: { control: P_ID; "0": number; "1": number; "2": number }[]; //control player, reldef of players
 }
 export function dualPlayerID(id: P_ID) {
   switch (id) {
-    case '0':
-      return '1';
-    case '1':
-      return '0';
+    case "0":
+      return "1";
+    case "1":
+      return "2";
+    case "2":
+      return "0";
   }
 }
 export const aiConfig = {
   enumerate: (G: GameState, ctx: Ctx) => {
-    let evts = [{ event: 'endTurn', args: [] }];
+    let evts = [{ event: "endTurn", args: [] }];
     const CIdLst = Array.from(Array(BoardSize.mx * BoardSize.my).keys());
     let atks = CIdLst.filter((id) => canAttack(G, ctx, id)[0]).map((id) => {
-      return { move: 'attack', args: [id] };
+      return { move: "attack", args: [id] };
     });
-    let moves = CIdLst.filter((stCId) => canPick(G, ctx, stCId)).flatMap((stCId) => {
-      //simply predict supply line after move
-      const cPlayer = ctx.currentPlayer as P_ID;
-      const newG: GameState = { ...G, cells: G.cells.map((obj, CId) => (CId === stCId ? null : obj)) };
-      const suppPred = getSuppliedCells(newG, cPlayer);
-      const dirSuppPred = getDirSuppliedLines(newG, cPlayer)[0];
-      //move to dir supplied or close friendly units.
-      return CIdLst.filter(
-        (edCId) => canPut(G, ctx, stCId, edCId) && (dirSuppPred.includes(edCId) || ptSetDisLessThan(suppPred, edCId)),
-      ).map((edCId) => {
-        return { move: 'movePiece', args: [stCId, edCId] };
-      });
-    });
+    let moves = CIdLst.filter((stCId) => canPick(G, ctx, stCId)).flatMap(
+      (stCId) => {
+        //simply predict supply line after move
+        const cPlayer = ctx.currentPlayer as P_ID;
+        const newG: GameState = {
+          ...G,
+          cells: G.cells.map((obj, CId) => (CId === stCId ? null : obj)),
+        };
+        const suppPred = getSuppliedCells(newG, cPlayer);
+        const dirSuppPred = getDirSuppliedLines(newG, cPlayer)[0];
+        //move to dir supplied or close friendly units.
+        return CIdLst.filter(
+          (edCId) =>
+            canPut(G, ctx, stCId, edCId) &&
+            (dirSuppPred.includes(edCId) || ptSetDisLessThan(suppPred, edCId))
+        ).map((edCId) => {
+          return { move: "movePiece", args: [stCId, edCId] };
+        });
+      }
+    );
     let result = [];
     if (moves.length > 0) {
       result = moves;
@@ -54,66 +65,74 @@ export const aiConfig = {
   },
   playoutDepth: 50,
   iterations: 10000,
-  objectScores: (G: GameState, ctx: Ctx, playerID:string) => {
-    const cPlayer = playerID as P_ID
+  objectScores: (G: GameState, ctx: Ctx, playerID: string) => {
+    const cPlayer = playerID as P_ID;
     /* if (G.moveRecords[cPlayer].length >= 5) {
       console.log('noMoreChoose')
       return { noMoreChoose: { weight: 1, checker: () => true } }
     } */
 
-    console.log('check objectives')
-    const opPlayer = dualPlayerID(cPlayer)
-    const cControlArea = totalControlArea(G, cPlayer)
-    const dirSuppliedNum = getDirSuppliedLines(G, cPlayer)[0].length
-    const cStronghold = totalStrongHold(G, cPlayer)
-    const opStronghold = totalStrongHold(G, opPlayer)
-    const cRelDef = totalRelDef(G, cPlayer)
-    const opRelDef = totalRelDef(G, opPlayer)
+    console.log("check objectives");
+    const opPlayer = dualPlayerID(cPlayer);
+    const cControlArea = totalControlArea(G, cPlayer);
+    const dirSuppliedNum = getDirSuppliedLines(G, cPlayer)[0].length;
+    const cStronghold = totalStrongHold(G, cPlayer);
+    const opStronghold = totalStrongHold(G, opPlayer);
+    const cRelDef = totalRelDef(G, cPlayer);
+    const opRelDef = totalRelDef(G, opPlayer);
     return {
       stillInSupply: {
         weight: 100,
-        checker: (G: any, ctx: Ctx) => { return !checkNoSupply(G, ctx.currentPlayer as P_ID) }
-      }, 
+        checker: (G: any, ctx: Ctx) => {
+          return !checkNoSupply(G, ctx.currentPlayer as P_ID);
+        },
+      },
       moreControlArea: {
         weight: 10,
         checker: (G: any, ctx: Ctx) => {
-          console.log("? more area than" + cControlArea)
-          return totalControlArea(G, cPlayer) - cControlArea
-        }
+          console.log("? more area than" + cControlArea);
+          return totalControlArea(G, cPlayer) - cControlArea;
+        },
       },
       moreDirSupply: {
         weight: 50,
-        checker: (G: any, ctx: Ctx) => { return getDirSuppliedLines(G, cPlayer)[0].length - dirSuppliedNum }
+        checker: (G: any, ctx: Ctx) => {
+          return getDirSuppliedLines(G, cPlayer)[0].length - dirSuppliedNum;
+        },
       },
       moreMyStronghold: {
         weight: 20,
-        checker: (G: any, ctx: Ctx) => { return totalStrongHold(G, cPlayer) - cStronghold }
+        checker: (G: any, ctx: Ctx) => {
+          return totalStrongHold(G, cPlayer) - cStronghold;
+        },
       },
       moreMyDef: {
         weight: 50,
-        checker: (G: any, ctx: Ctx) => { return totalRelDef(G, cPlayer) - cRelDef }
+        checker: (G: any, ctx: Ctx) => {
+          return totalRelDef(G, cPlayer) - cRelDef;
+        },
       },
       lessOpStronghold: {
         weight: 50,
-        checker: (G: any, ctx: Ctx) => { return opStronghold-totalStrongHold(G, opPlayer) }
+        checker: (G: any, ctx: Ctx) => {
+          return opStronghold - totalStrongHold(G, opPlayer);
+        },
       },
       lessOpDef: {
         weight: 40,
-        checker: (G: any, ctx: Ctx) => { return opRelDef-totalRelDef(G, opPlayer)  }
+        checker: (G: any, ctx: Ctx) => {
+          return opRelDef - totalRelDef(G, opPlayer);
+        },
       },
-
-    }
-  }
-
-
+    };
+  },
 };
 
 export const Kriegspiel: Game<GameState> = {
-  name: 'kriegspiel',
+  name: "kriegspiel",
   setup: (ctx) => {
     return loadGame(game0, ctx);
   },
-
   turn: {
     onBegin(G, ctx) {
       const cPlayer = ctx.currentPlayer as P_ID;
@@ -121,7 +140,11 @@ export const Kriegspiel: Game<GameState> = {
       G.attackRecords[cPlayer] = null;
       const retreatSt = G.forcedRetreat[cPlayer][0];
       //if nowhere to retreat or out of supply
-      if (retreatSt !== null && (moveRange(G, retreatSt, 1).length === 0 || !G.cells[retreatSt]?.supplied)) {
+      if (
+        retreatSt !== null &&
+        (moveRange(G, retreatSt, 1).length === 0 ||
+          !G.cells[retreatSt]?.supplied)
+      ) {
         //then be captured
         G.cells[retreatSt] = null;
         G.forcedRetreat[cPlayer] = [null, null];
@@ -150,7 +173,9 @@ export const Kriegspiel: Game<GameState> = {
           },
           merge: (G, ctx, fen: string) => {
             const addCells = loadPieces(fen);
-            const newCells = G.cells.map((obj, id) => (addCells[id] ? addCells[id] : obj));
+            const newCells = G.cells.map((obj, id) =>
+              addCells[id] ? addCells[id] : obj
+            );
             G.cells = newCells;
             update(G, ctx);
           },
@@ -211,7 +236,10 @@ export const Kriegspiel: Game<GameState> = {
 
   endIf: (G, ctx) => {
     const cPlayer = ctx.currentPlayer as P_ID;
-    const arsenals = filterCId(G.places, (str) => str.placeType === 'Arsenal' && str.belong === cPlayer);
+    const arsenals = filterCId(
+      G.places,
+      (str) => str.placeType === "Arsenal" && str.belong === cPlayer
+    );
     if (G.places.filter((str) => str).length !== 0 && arsenals.length === 0) {
       return { winner: dualPlayerID(cPlayer), loser: cPlayer };
     }
@@ -224,49 +252,77 @@ export const Kriegspiel: Game<GameState> = {
 function totalStrongHold(G: GameState, pId: P_ID) {
   //total strongHold with weight
   // 'Arsenal' | 'Fortress'| 'Pass' | 'Mountain';
-  return G.places.filter((str) => str && str.belong === pId).reduce((sum, str) => {
-    let add = 0
-    switch (str?.placeType) {
-      case 'Arsenal': add = 20; break;
-      case 'Fortress': add = 4; break;
-      case 'Pass': add = 2; break;
-    }
-    return sum + add
-  }, 0)
+  return G.places
+    .filter((str) => str && str.belong === pId)
+    .reduce((sum, str) => {
+      let add = 0;
+      switch (str?.placeType) {
+        case "Arsenal":
+          add = 20;
+          break;
+        case "Fortress":
+          add = 4;
+          break;
+        case "Pass":
+          add = 2;
+          break;
+      }
+      return sum + add;
+    }, 0);
 }
 
 function totalControlArea(G: GameState, pId: P_ID) {
-  return G.controlArea.filter((area) => area.control === pId).length
+  return G.controlArea.filter((area) => area.control === pId).length;
 }
 
 function checkNoSupply(G: GameState, pId: P_ID) {
-  return G.cells.some((obj) => obj && obj.belong === pId && !obj.supplied && obj.objType !== 'Relay')
+  return G.cells.some(
+    (obj) =>
+      obj && obj.belong === pId && !obj.supplied && obj.objType !== "Relay"
+  );
 }
 
 function totalRelDef(G: GameState, pId: P_ID) {
-  //total RelDef of all pieces, with weight 
+  //total RelDef of all pieces, with weight
   //'Infantry' | 'Cavalry' | 'Artillery' | 'Swift_Artillery' | 'Relay' | 'Swift_Relay';
-  return filterCId(G.cells, (obj) => obj && obj.belong === pId).reduce((sum, CId) => {
-    let w = 1
-    const relDef = G.controlArea[CId][pId]
-    const obj = G.cells[CId]
-    switch (obj?.typeName) {
-      case 'Infantry': w = 1; break;
-      case 'Cavalry': w = 2; break;
-      case 'Artillery': w = 1.5; break;
-      case 'Swift_Artillery': w = 1.8; break;
-      case 'Relay': w = 1.2; break;
-      case 'Swift_Relay': w = 1.5; break;
-    }
-    return sum + w * relDef
-  }, 0)
+  return filterCId(G.cells, (obj) => obj && obj.belong === pId).reduce(
+    (sum, CId) => {
+      let w = 1;
+      const relDef = G.controlArea[CId][pId];
+      const obj = G.cells[CId];
+      switch (obj?.typeName) {
+        case "Infantry":
+          w = 1;
+          break;
+        case "Cavalry":
+          w = 2;
+          break;
+        case "Artillery":
+          w = 1.5;
+          break;
+        case "Swift_Artillery":
+          w = 1.8;
+          break;
+        case "Relay":
+          w = 1.2;
+          break;
+        case "Swift_Relay":
+          w = 1.5;
+          break;
+      }
+      return sum + w * relDef;
+    },
+    0
+  );
 }
-
 
 //data save and load board use FEN
 //date like "💂‍♂️.0/🎪.0|8|"
 
-function board2FEN<T>(board: (T | null)[], encode: (t: T, id: CellID) => string): string {
+function board2FEN<T>(
+  board: (T | null)[],
+  encode: (t: T, id: CellID) => string
+): string {
   let result: string[] = [];
   let emptyCells = 0;
   board.forEach((obj, id) => {
@@ -280,10 +336,13 @@ function board2FEN<T>(board: (T | null)[], encode: (t: T, id: CellID) => string)
       result.push(encode(obj, id));
     }
   });
-  return '|' + result.join('|') + '|';
+  return "|" + result.join("|") + "|";
 }
-function FEN2board<T>(fen: string, decode: (str: string) => T | null): (T | null)[] {
-  let data: string[] = fen.split('|');
+function FEN2board<T>(
+  fen: string,
+  decode: (str: string) => T | null
+): (T | null)[] {
+  let data: string[] = fen.split("|");
   let result = Array(BoardSize.mx * BoardSize.my).fill(null);
   let pointer = 0;
   data.forEach((str) => {
@@ -300,18 +359,31 @@ function FEN2board<T>(fen: string, decode: (str: string) => T | null): (T | null
 export function exportGame(G: GameState): string {
   const mixedBoard = G.cells.map((obj, id) => {
     const strong = G.places[id];
-    return obj ? (strong ? ([obj, strong] as [ObjInstance, Stronghold]) : obj) : strong ? strong : null;
+    return obj
+      ? strong
+        ? ([obj, strong] as [ObjInstance, Stronghold])
+        : obj
+      : strong
+      ? strong
+      : null;
   });
   return board2FEN(mixedBoard, (element) => {
     if (Array.isArray(element)) {
       const [obj, str] = element;
-      return obj.objRender + '.' + obj.belong + '/' + str.placeRender + (str.belong ? '.' + str.belong : '');
+      return (
+        obj.objRender +
+        "." +
+        obj.belong +
+        "/" +
+        str.placeRender +
+        (str.belong ? "." + str.belong : "")
+      );
     } else if ((element as ObjInstance).objRender) {
       const obj = element as ObjInstance;
-      return obj.objRender + '.' + obj.belong;
+      return obj.objRender + "." + obj.belong;
     } else {
       const str = element as Stronghold;
-      return str.placeRender + (str.belong ? '.' + str.belong : '');
+      return str.placeRender + (str.belong ? "." + str.belong : "");
     }
   });
 }
@@ -319,14 +391,14 @@ export function exportGame(G: GameState): string {
 export function loadPieces(fen: string) {
   return FEN2board(fen, (str) => {
     //💂‍♂️.0/🎪.0
-    const data = str.split('/')[0];
+    const data = str.split("/")[0];
     return data ? decodeObj(data) : null;
   });
 }
 function loadPlaces(fen: string) {
   return FEN2board(fen, (str) => {
     //💂‍♂️.0/🎪.0
-    const dLst = str.split('/');
+    const dLst = str.split("/");
     const data = dLst[dLst.length - 1];
     return data ? decodeStrong(data) : null;
   });
@@ -336,40 +408,53 @@ export function loadGame(fen: string, ctx: Ctx): GameState {
   const deCells = loadPieces(fen);
   const dePlaces = loadPlaces(fen);
   let myGame: GameState = {
+    players: [
+      { id: "0", name: "North" },
+      { id: "1", name: "East" },
+      { id: "2", name: "South" },
+    ],
+    alliances: { "0": ["2"], "1": ["2"], "2": ["0", "1"] },
     cells: deCells,
     places: dePlaces,
     inSupply: {
-      '0': Array(BoardSize.mx * BoardSize.my).fill(false),
-      '1': Array(BoardSize.mx * BoardSize.my).fill(false),
+      "0": Array(BoardSize.mx * BoardSize.my).fill(false),
+      "1": Array(BoardSize.mx * BoardSize.my).fill(false),
+      "2": Array(BoardSize.mx * BoardSize.my).fill(false),
     },
-    moveRecords: { 0: [], 1: [] },
-    attackRecords: { 0: null, 1: null },
-    forcedRetreat: { 0: [null, null], 1: [null, null] },
+    moveRecords: { 0: [], 1: [], 2: [] },
+    attackRecords: { 0: null, 1: null, 2: null },
+    forcedRetreat: { 0: [null, null], 1: [null, null], 2: [null, null] },
     controlArea: Array((BoardSize.mx * BoardSize.my) / 2)
-      .fill({ control: '0', '0': 0, '1': 0 })
-      .concat(Array((BoardSize.mx * BoardSize.my) / 2).fill({ control: '1', '0': 0, '1': 0 })),
+      .fill({ control: "0", "0": 0, "1": 0 })
+      .concat(
+        Array((BoardSize.mx * BoardSize.my) / 2).fill({
+          control: "1",
+          "0": 0,
+          "1": 0,
+        })
+      ),
   };
   update(myGame, ctx);
   return myGame;
 }
 //💂‍♂️.0->newPiece
 function decodeObj(s: string): ObjInstance | null {
-  const [t, b] = s.split('.');
+  const [t, b] = s.split(".");
   if (t && b) {
     const be = b as P_ID;
     switch (t) {
-      case '💂':
-        return newPiece('Infantry', be);
-      case '🏇':
-        return newPiece('Cavalry', be);
-      case '🎉':
-        return newPiece('Artillery', be);
-      case '🚀':
-        return newPiece('Swift_Artillery', be);
-      case '🚩':
-        return newPiece('Relay', be);
-      case '🚚':
-        return newPiece('Swift_Relay', be);
+      case "💂":
+        return newPiece("Infantry", be);
+      case "🏇":
+        return newPiece("Cavalry", be);
+      case "🎉":
+        return newPiece("Artillery", be);
+      case "🚀":
+        return newPiece("Swift_Artillery", be);
+      case "🚩":
+        return newPiece("Relay", be);
+      case "🚚":
+        return newPiece("Swift_Relay", be);
 
       default:
         return null;
@@ -378,47 +463,48 @@ function decodeObj(s: string): ObjInstance | null {
 }
 
 function decodeStrong(s: string): Stronghold | null {
-  const [t, b] = s.split('.');
+  const [t, b] = s.split(".");
   if (t) {
     const be = b ? (b as P_ID) : null;
     switch (t) {
-      case '🎪':
-        return newStronghold('Arsenal', be);
-      case '🏰':
-        return newStronghold('Fortress', be);
-      case '🛣️':
-        return newStronghold('Pass', be);
-      case '⛰️':
-        return newStronghold('Mountain', be);
+      case "🎪":
+        return newStronghold("Arsenal", be);
+      case "🏰":
+        return newStronghold("Fortress", be);
+      case "🛣️":
+        return newStronghold("Pass", be);
+      case "⛰️":
+        return newStronghold("Mountain", be);
       default:
         return null;
     }
   } else return null;
 }
 export const onlyMap =
-  '|32|🏰|6|🎪.0|19|⛰️|⛰️|⛰️|⛰️|19|🎪.0|1|⛰️|24|⛰️|24|🛣️|24|⛰️|24|⛰️|10|🏰|13|⛰️|2|🏰|76|🏰|12|🏰|32|⛰️|⛰️|⛰️|⛰️|⛰️|⛰️|24|🛣️|6|🏰|17|⛰️|24|⛰️|24|⛰️|36|🎪.1|19|🎪.1|';
+  "|32|🏰|6|🎪.0|19|⛰️|⛰️|⛰️|⛰️|19|🎪.0|1|⛰️|24|⛰️|24|🛣️|24|⛰️|24|⛰️|10|🏰|13|⛰️|2|🏰|76|🏰|12|🏰|32|⛰️|⛰️|⛰️|⛰️|⛰️|⛰️|24|🛣️|6|🏰|17|⛰️|24|⛰️|24|⛰️|36|🎪.1|19|🎪.1|";
 
 //default game
 const game0 =
-  '|32|🏰|6|🎪.0|19|⛰️|⛰️|⛰️|⛰️|14|🚩.0|4|🎪.0|1|⛰️|24|⛰️|19|🚚.0|4|💂.0/🛣️.0|17|🏇.0|🏇.0|1|💂.0|💂.0|🎉.0|💂.0|⛰️|17|🏇.0|🏇.0|💂.0|🚀.0|💂.0|💂.0|💂.0|⛰️|10|🏰|9|💂.0|3|⛰️|2|🏰|51|💂.1|💂.1|💂.1|🎉.1|🏇.1|20|💂.1/🏰.1|💂.1|💂.1|🏇.1|🏇.1|8|🏰|11|💂.1|💂.1|💂.1|🏇.1|17|⛰️|⛰️|⛰️|⛰️|⛰️|⛰️|🚚.1|23|🚀.1/🛣️.1|6|🚩.1/🏰.1|17|⛰️|24|⛰️|24|⛰️|36|🎪.1|19|🎪.1|';
+  // "|32|🏰|6|🎪.0|19|⛰️|⛰️|⛰️|⛰️|14|🚩.0|4|🎪.0|1|⛰️|24|⛰️|19|🚚.0|4|💂.0/🛣️.0|17|🏇.0|🏇.0|1|💂.0|💂.0|🎉.0|💂.0|⛰️|17|🏇.0|🏇.0|💂.0|🚀.0|💂.0|💂.0|💂.0|⛰️|10|🏰|9|💂.0|3|⛰️|2|🏰|51|💂.1|💂.1|💂.1|🎉.1|🏇.1|20|💂.1/🏰.1|💂.1|💂.1|🏇.1|🏇.1|8|🏰|11|💂.1|💂.1|💂.1|🏇.1|17|⛰️|⛰️|⛰️|⛰️|⛰️|⛰️|🚚.1|23|🚀.1/🛣️.1|6|🚩.1/🏰.1|17|⛰️|24|⛰️|24|⛰️|36|🎪.1|19|🎪.1|";
+  "|32|🏰|6|🎪.0|19|⛰️|⛰️|⛰️|⛰️|14|🚩.0|4|🎪.0|1|⛰️|24|⛰️|19|🚚.0|4|💂.0/🛣️.0|17|🏇.0|🏇.0|1|💂.0|💂.0|🎉.0|💂.0|⛰️|17|🏇.0|🏇.0|💂.0|🚀.0|💂.0|💂.0|💂.0|⛰️|10|🏰|9|💂.0|3|⛰️|2|🏰|51|💂.1|💂.1|💂.1|🎉.1|🏇.1|20|💂.1/🏰.1|💂.1|💂.1|🏇.1|🏇.1|8|🏰|11|💂.1|💂.1|💂.1|🏇.1|17|⛰️|⛰️|⛰️|⛰️|⛰️|⛰️|🚚.1|23|🚀.1/🛣️.1|6|🚩.1/🏰.1|17|⛰️|24|⛰️|24|⛰️|36|🎪.1|19|🎪.1|70|🎪.2|101|💂.2|101|💂.0";
 //Pump House
 const game1 =
-  '|32|🏰|6|🎪.0|19|⛰️|⛰️|⛰️|⛰️|19|🎪.0|1|⛰️|24|⛰️|💂.0|23|💂.0/🛣️.0|🎉.0|23|⛰️|🚩.0|💂.0|16|🚚.0|🏇.0|🏇.0|💂.0|1|💂.0|⛰️|10|🏰|8|🏇.0|🚀.0|1|💂.0|1|⛰️|2|🏰|16|🏇.0|1|💂.0|💂.0|💂.0|55|🏰|12|🏰|17|🏇.1|🏇.1|🏇.1|12|⛰️|⛰️|⛰️|⛰️|⛰️|⛰️|💂.1|🎉.1|💂.1|💂.1|🚀.1|🏇.1|🚚.1|17|💂.1/🛣️.1|1|🚩.1|💂.1|💂.1|💂.1|1|💂.1/🏰.1|17|⛰️|4|💂.1|19|⛰️|24|⛰️|36|🎪.1|19|🎪.1|';
+  "|32|🏰|6|🎪.0|19|⛰️|⛰️|⛰️|⛰️|19|🎪.0|1|⛰️|24|⛰️|💂.0|23|💂.0/🛣️.0|🎉.0|23|⛰️|🚩.0|💂.0|16|🚚.0|🏇.0|🏇.0|💂.0|1|💂.0|⛰️|10|🏰|8|🏇.0|🚀.0|1|💂.0|1|⛰️|2|🏰|16|🏇.0|1|💂.0|💂.0|💂.0|55|🏰|12|🏰|17|🏇.1|🏇.1|🏇.1|12|⛰️|⛰️|⛰️|⛰️|⛰️|⛰️|💂.1|🎉.1|💂.1|💂.1|🚀.1|🏇.1|🚚.1|17|💂.1/🛣️.1|1|🚩.1|💂.1|💂.1|💂.1|1|💂.1/🏰.1|17|⛰️|4|💂.1|19|⛰️|24|⛰️|36|🎪.1|19|🎪.1|";
 //Rio de Janeiro
 const game2 =
-  '|32|🏰|6|🎪.0|19|⛰️|⛰️|⛰️|⛰️|19|🎪.0|1|⛰️|24|⛰️|21|🏇.0|🚚.0|💂.0|💂.0/🛣️.0|20|🚀.0|🏇.0|💂.0|1|⛰️|9|💂.0|🚩.0|🏇.0|12|⛰️|2|💂.0|💂.0|5|💂.0|🎉.0/🏰.0|🏇.0|12|⛰️|2|💂.0/🏰.0|💂.0|74|💂.1|💂.1/🏰.1|5|💂.1|💂.1|🚀.1|🏇.1|3|💂.1/🏰.1|💂.1|🎉.1|10|💂.1|5|💂.1|1|🏇.1|3|🏇.1|🏇.1|6|⛰️|⛰️|⛰️|⛰️|⛰️|⛰️|11|🚚.1|12|💂.1/🛣️.1|1|🚩.1|4|🏰|17|⛰️|24|⛰️|24|⛰️|36|🎪.1|19|🎪.1|';
+  "|32|🏰|6|🎪.0|19|⛰️|⛰️|⛰️|⛰️|19|🎪.0|1|⛰️|24|⛰️|21|🏇.0|🚚.0|💂.0|💂.0/🛣️.0|20|🚀.0|🏇.0|💂.0|1|⛰️|9|💂.0|🚩.0|🏇.0|12|⛰️|2|💂.0|💂.0|5|💂.0|🎉.0/🏰.0|🏇.0|12|⛰️|2|💂.0/🏰.0|💂.0|74|💂.1|💂.1/🏰.1|5|💂.1|💂.1|🚀.1|🏇.1|3|💂.1/🏰.1|💂.1|🎉.1|10|💂.1|5|💂.1|1|🏇.1|3|🏇.1|🏇.1|6|⛰️|⛰️|⛰️|⛰️|⛰️|⛰️|11|🚚.1|12|💂.1/🛣️.1|1|🚩.1|4|🏰|17|⛰️|24|⛰️|24|⛰️|36|🎪.1|19|🎪.1|";
 //1800 Marengo campaign
 const game3 =
-  '|32|🏰|6|🎪.0|19|⛰️|⛰️|⛰️|⛰️|19|🎪.0|1|⛰️|24|⛰️|20|🚩.0|3|💂.0/🛣️.0|8|🚚.0|15|⛰️|17|🏇.0|🏇.0|🎉.0|💂.0|3|⛰️|10|🚀.0/🏰.0|💂.0|🏇.0|🏇.0|4|💂.0|💂.0|💂.0|3|⛰️|2|🏰|6|💂.0|💂.0|💂.0|67|💂.1/🏰.1|12|💂.1/🏰.1|💂.1|24|🎉.1|6|⛰️|⛰️|⛰️|⛰️|⛰️|⛰️|💂.1|15|💂.1|7|🛣️|1|🚩.1|4|💂.1/🏰.1|8|🚚.1|8|⛰️|24|⛰️|19|💂.1|💂.1|3|⛰️|18|🏇.1|🏇.1|💂.1|15|🎪.1|6|🏇.1|🚀.1|🏇.1|10|🎪.1|';
+  "|32|🏰|6|🎪.0|19|⛰️|⛰️|⛰️|⛰️|19|🎪.0|1|⛰️|24|⛰️|20|🚩.0|3|💂.0/🛣️.0|8|🚚.0|15|⛰️|17|🏇.0|🏇.0|🎉.0|💂.0|3|⛰️|10|🚀.0/🏰.0|💂.0|🏇.0|🏇.0|4|💂.0|💂.0|💂.0|3|⛰️|2|🏰|6|💂.0|💂.0|💂.0|67|💂.1/🏰.1|12|💂.1/🏰.1|💂.1|24|🎉.1|6|⛰️|⛰️|⛰️|⛰️|⛰️|⛰️|💂.1|15|💂.1|7|🛣️|1|🚩.1|4|💂.1/🏰.1|8|🚚.1|8|⛰️|24|⛰️|19|💂.1|💂.1|3|⛰️|18|🏇.1|🏇.1|💂.1|15|🎪.1|6|🏇.1|🚀.1|🏇.1|10|🎪.1|";
 //1805 battle of Austerlitz
 const game4 =
-  '|32|🏰|6|🎪.0|19|⛰️|⛰️|⛰️|⛰️|19|🎪.0|1|⛰️|24|⛰️|24|🛣️|20|🏇.0|1|🚚.0|1|⛰️|21|💂.0|2|⛰️|10|🚩.0/🏰|💂.0|8|💂.0|1|🎉.0|1|⛰️|2|💂.0/🏰.0|💂.0|6|💂.0|💂.0|🏇.0|🚀.0|21|💂.0|💂.0|🏇.0|🏇.0|40|🎉.1/🏰.1|12|💂.1/🏰.1|💂.1|9|💂.1|1|💂.1|12|🏇.1|6|⛰️|⛰️|⛰️|⛰️|⛰️|⛰️|7|💂.1|3|🚩.1|4|🚚.1|2|💂.1|💂.1|3|🛣️|6|💂.1/🏰.1|11|🚀.1|🏇.1|💂.1|3|⛰️|19|🏇.1|🏇.1|3|⛰️|24|⛰️|36|🎪.1|19|🎪.1|';
+  "|32|🏰|6|🎪.0|19|⛰️|⛰️|⛰️|⛰️|19|🎪.0|1|⛰️|24|⛰️|24|🛣️|20|🏇.0|1|🚚.0|1|⛰️|21|💂.0|2|⛰️|10|🚩.0/🏰|💂.0|8|💂.0|1|🎉.0|1|⛰️|2|💂.0/🏰.0|💂.0|6|💂.0|💂.0|🏇.0|🚀.0|21|💂.0|💂.0|🏇.0|🏇.0|40|🎉.1/🏰.1|12|💂.1/🏰.1|💂.1|9|💂.1|1|💂.1|12|🏇.1|6|⛰️|⛰️|⛰️|⛰️|⛰️|⛰️|7|💂.1|3|🚩.1|4|🚚.1|2|💂.1|💂.1|3|🛣️|6|💂.1/🏰.1|11|🚀.1|🏇.1|💂.1|3|⛰️|19|🏇.1|🏇.1|3|⛰️|24|⛰️|36|🎪.1|19|🎪.1|";
 export const gameList = [
-  { name: 'Default', data: game0 },
-  { name: 'Pump House', data: game1 },
-  { name: 'Rio de Janeiro', data: game2 },
-  { name: '1800 Marengo campaign', data: game3 },
-  { name: '1805 battle of Austerlitz', data: game4 },
+  { name: "Default", data: game0 },
+  { name: "Pump House", data: game1 },
+  { name: "Rio de Janeiro", data: game2 },
+  { name: "1800 Marengo campaign", data: game3 },
+  { name: "1805 battle of Austerlitz", data: game4 },
 ];
 
 //update game
@@ -430,14 +516,19 @@ function update(G: GameState, ctx: Ctx) {
   //check update of the stronghold
   G.places.forEach((strong, CId) => {
     if (!strong) {
-    } else if (strong.placeType === 'Mountain') {
+    } else if (strong.placeType === "Mountain") {
     }
     //if on arsenals,
-    else if (strong.placeType === 'Arsenal' && strong.belong) {
+    else if (strong.placeType === "Arsenal" && strong.belong) {
       const obj = G.cells[CId];
       // obj is a enemy, and have offense, and is supplied , check in update
-      if (obj && obj.belong !== strong.belong && obj.offense > 0 && obj.supplied) {
-        G.attackRecords[cPlayer] = [CId, 'Arsenal'];
+      if (
+        obj &&
+        obj.belong !== strong.belong &&
+        obj.offense > 0 &&
+        obj.supplied
+      ) {
+        G.attackRecords[cPlayer] = [CId, "Arsenal"];
 
         G.places[CId] = null;
         //then add 1 atk action
@@ -455,16 +546,23 @@ function update(G: GameState, ctx: Ctx) {
 }
 
 function updateSuppliedCells(G: GameState, player?: P_ID) {
-  if (player !== '1') {
-    const SuppliedCells0 = getSuppliedCells(G, '0');
+  if (player !== "1") {
+    const SuppliedCells0 = getSuppliedCells(G, "0");
     G.inSupply[0] = SuppliedCells0;
   }
 
-  if (player !== '0') {
-    const SuppliedCells1 = getSuppliedCells(G, '1');
+  if (player !== "0") {
+    const SuppliedCells1 = getSuppliedCells(G, "1");
 
     G.inSupply[1] = SuppliedCells1;
   }
+
+  if (player !== "2") {
+    const SuppliedCells2 = getSuppliedCells(G, "2");
+
+    G.inSupply[2] = SuppliedCells2;
+  }
+
   updateSuppliedObj(G);
 }
 function updateSuppliedObj(G: GameState) {
@@ -479,20 +577,21 @@ function updateSuppliedObj(G: GameState) {
 function updateControlArea(G: GameState) {
   const oldArea = G.controlArea;
   G.controlArea = oldArea.map((area, CId) => {
-    const relDef0 = getRelDef(G, CId, '0');
-    const relDef1 = getRelDef(G, CId, '1');
+    const relDef0 = getRelDef(G, CId, "0");
+    const relDef1 = getRelDef(G, CId, "1");
+    const relDef2 = getRelDef(G, CId, "2");
     let newControl = area.control;
     if (relDef0 > relDef1) {
-      newControl = '0';
+      newControl = "0";
     }
     if (relDef1 > relDef0) {
-      newControl = '1';
+      newControl = "1";
     }
     const obj = G.cells[CId];
     if (obj) {
       newControl = obj.belong;
     }
-    return { control: newControl, '0': relDef0, '1': relDef1 };
+    return { control: newControl, "0": relDef0, "1": relDef1, "2": relDef2 };
   });
 }
 
@@ -507,7 +606,7 @@ interface Size {
   readonly mx: number;
   readonly my: number;
 }
-export const BoardSize: Size = { mx: 25, my: 20 };
+export const BoardSize: Size = { mx: 50, my: 40 };
 
 export function Pos2CId(x: number, y: number): CellID {
   if (x < 0 || y < 0 || x >= BoardSize.mx || y >= BoardSize.my) {
@@ -527,8 +626,11 @@ function NaiveDistance(p1: Position, p2: Position): number {
   return Math.max(Math.abs(p1.x - p2.x), Math.abs(p1.y - p2.y));
 }
 
-
-export function ptSetDisLessThan(set: CellID[], pt: CellID, dis: number = 1): boolean {
+export function ptSetDisLessThan(
+  set: CellID[],
+  pt: CellID,
+  dis: number = 1
+): boolean {
   if (set && set.length > 0) {
     return set.some((CId) => NaiveDistance(CId2Pos(pt), CId2Pos(CId)) <= dis);
   } else return false;
@@ -541,7 +643,9 @@ function connectedComponents(set: CellID[], pts: CellID[]): CellID[] {
 
   do {
     //new pts are not in old, and distance is less than 1
-    newSet = set.filter((CId) => !oldSet.includes(CId) && ptSetDisLessThan(oldSet, CId));
+    newSet = set.filter(
+      (CId) => !oldSet.includes(CId) && ptSetDisLessThan(oldSet, CId)
+    );
     oldSet = oldSet.concat(newSet);
   } while (newSet.length > 0);
   return oldSet;
@@ -556,8 +660,13 @@ export function removeDup<T>(a: Array<T>) {
   return Array.from(new Set(a));
 }
 
-export function filterCId<T>(a: (T | null)[], filter: (b: T, c: CellID) => boolean): CellID[] {
-  return a.map((obj, id) => (obj && filter(obj, id) ? id : null)).filter(nonNull) as CellID[];
+export function filterCId<T>(
+  a: (T | null)[],
+  filter: (b: T, c: CellID) => boolean
+): CellID[] {
+  return a
+    .map((obj, id) => (obj && filter(obj, id) ? id : null))
+    .filter(nonNull) as CellID[];
 }
 
 export function canPick(G: GameState, ctx: Ctx, CId: CellID) {
@@ -566,7 +675,11 @@ export function canPick(G: GameState, ctx: Ctx, CId: CellID) {
   const retreatSt = G.forcedRetreat[cPlayer][0];
 
   //according the record, not yet attack, each piece has most 1 move, totally 5 moves
-  if (G.attackRecords[cPlayer] !== null || moveEdRec.length >= 5 || moveEdRec.includes(CId)) {
+  if (
+    G.attackRecords[cPlayer] !== null ||
+    moveEdRec.length >= 5 ||
+    moveEdRec.includes(CId)
+  ) {
     return false;
   }
   //if there is a retreat
@@ -575,7 +688,11 @@ export function canPick(G: GameState, ctx: Ctx, CId: CellID) {
   } else {
     let obj = G.cells[CId];
     //obj belongs to player, and must be supplied, except relays
-    return obj !== null && obj.belong === cPlayer && (obj.supplied || obj.objType === 'Relay');
+    return (
+      obj !== null &&
+      obj.belong === cPlayer &&
+      (obj.supplied || obj.objType === "Relay")
+    );
   }
 }
 export function canPut(G: GameState, ctx: Ctx, stCId: CellID, edCId: CellID) {
@@ -592,24 +709,34 @@ function moveRange(G: GameState, stCId: CellID, speed: number = 1): CellID[] {
     result = G.cells
       .map((obj, id) =>
         NaiveDistance(CId2Pos(stCId), CId2Pos(id)) <= speed &&
-          obj === null &&
-          G.places[id]?.placeType !== 'Mountain' &&
-          ptSetDisLessThan(result, id)
+        obj === null &&
+        G.places[id]?.placeType !== "Mountain" &&
+        ptSetDisLessThan(result, id)
           ? id
-          : null,
+          : null
       )
       .filter(nonNull) as CellID[];
   }
   return result;
 }
 
-export function canAttack(G: GameState, ctx: Ctx, CId: CellID): [boolean, number] {
+export function canAttack(
+  G: GameState,
+  ctx: Ctx,
+  CId: CellID
+): [boolean, number] {
   const cPlayer = ctx.currentPlayer as P_ID;
   const obj = G.cells[CId];
   const retreatSt = G.forcedRetreat[cPlayer][0];
 
   //if there is no retreat one haven't attacked and obj is enemy
-  if (retreatSt === null && G.attackRecords[cPlayer] === null && obj && obj.belong !== cPlayer) {
+  if (
+    retreatSt === null &&
+    G.attackRecords[cPlayer] === null &&
+    obj &&
+    obj.belong !== cPlayer &&
+    !G.alliances[cPlayer].includes(obj.belong)
+  ) {
     const enemy = obj.belong;
     const off = getBattleFactor(G, cPlayer, true, CId)[0];
     const def = getBattleFactor(G, enemy, false, CId)[0];
@@ -625,7 +752,7 @@ function searchInMiShape(
   CId: CellID,
   filter: (obj: ObjInstance | null, id: CellID) => boolean,
   min: number = 0,
-  max: number = Math.max(BoardSize.mx, BoardSize.my),
+  max: number = Math.max(BoardSize.mx, BoardSize.my)
 ): [CellID[][], Position[][]] {
   const pos = CId2Pos(CId);
   const aCIdRowsLst: CellID[][] = [];
@@ -670,7 +797,7 @@ export function getChargedCavalries(G: GameState, CId: CellID): Position[][] {
   const placesType = G.places[CId]?.placeType;
 
   //the target not in a stronghold, and has piece on it
-  if (placesType === 'Fortress' || placesType === 'Pass' || !obj) {
+  if (placesType === "Fortress" || placesType === "Pass" || !obj) {
     return [];
   } else {
     const chargeRowsLst = searchInMiShape(
@@ -679,25 +806,41 @@ export function getChargedCavalries(G: GameState, CId: CellID): Position[][] {
       (cObj, cCId) =>
         //check cObj is a cavalry, a enemy, supplied,not retreating , not in a fortress
         cObj !== null &&
-        cObj.objType === 'Cavalry' &&
+        cObj.objType === "Cavalry" &&
         cObj.belong !== belong &&
         cObj.supplied &&
         !cObj.retreating &&
-        G.places[cCId]?.placeType !== 'Fortress',
+        G.places[cCId]?.placeType !== "Fortress",
       1,
-      4,
+      4
     )[1];
     return chargeRowsLst;
   }
 }
 
 export function fireRange(G: GameState, CId: CellID, range: number): CellID[] {
-  return removeDup(searchInMiShape(G, CId, (obj, id) => G.places[id]?.placeType !== 'Mountain', 0, range)[0].flat());
+  return removeDup(
+    searchInMiShape(
+      G,
+      CId,
+      (obj, id) => G.places[id]?.placeType !== "Mountain",
+      0,
+      range
+    )[0].flat()
+  );
 }
 function getRelDef(G: GameState, CId: CellID, belong: P_ID) {
-  return getBattleFactor(G, belong, false, CId)[0] - getBattleFactor(G, dualPlayerID(belong), true, CId)[0];
+  return (
+    getBattleFactor(G, belong, false, CId)[0] -
+    getBattleFactor(G, dualPlayerID(belong), true, CId)[0]
+  );
 }
-export function getBattleFactor(G: GameState, player: P_ID, isOffense: boolean, CId: CellID): [number, CellID[]] {
+export function getBattleFactor(
+  G: GameState,
+  player: P_ID,
+  isOffense: boolean,
+  CId: CellID
+): [number, CellID[]] {
   //type: true->offense, false->defense
   const pos = CId2Pos(CId);
   const targetObj = G.cells[CId];
@@ -721,10 +864,14 @@ export function getBattleFactor(G: GameState, player: P_ID, isOffense: boolean, 
     .map((id) => {
       const obj = G.cells[id];
       const strong = G.places[id];
-      return strong && strong.defenseAdd > 0 && obj && obj.canAddDef ? strong : null;
+      return strong && strong.defenseAdd > 0 && obj && obj.canAddDef
+        ? strong
+        : null;
     })
     .filter((obj) => obj) as Stronghold[];
-  const strongholdDef = effectingStronghold.map((obj) => obj.defenseAdd).reduce((a, b) => a + b, 0);
+  const strongholdDef = effectingStronghold
+    .map((obj) => obj.defenseAdd)
+    .reduce((a, b) => a + b, 0);
 
   //get charged cavalries
   const chargedCavalries = getChargedCavalries(G, CId)
@@ -739,7 +886,9 @@ export function getBattleFactor(G: GameState, player: P_ID, isOffense: boolean, 
   //if it is offensive, merge objs in range and in charge
   if (targetObj && targetObj.belong !== player && isOffense) {
     // add and merge cavalries
-    effectingObjs = Array.from(new Set([...effectingObjs, ...chargedCavalries]));
+    effectingObjs = Array.from(
+      new Set([...effectingObjs, ...chargedCavalries])
+    );
 
     // add charge value
     addValue = 3 * chargedAmount;
@@ -756,7 +905,6 @@ export function getBattleFactor(G: GameState, player: P_ID, isOffense: boolean, 
   ];
 }
 
-
 //Supply
 
 export function dirSupplyFrom(G: GameState, CId: CellID, player: P_ID) {
@@ -767,23 +915,46 @@ export function dirSupplyFrom(G: GameState, CId: CellID, player: P_ID) {
       //filter the objs block the supply lines
       //obj is enemy, has offense factor, is supplied, not retreat
       //and mountains also block
-      !(obj && obj.belong !== player && obj.offense > 0 && obj.supplied) && G.places[id]?.placeType !== 'Mountain',
+      !(
+        obj &&
+        obj.belong !== player &&
+        !G.alliances[player].includes(obj.belong) &&
+        obj.offense > 0 &&
+        obj.supplied
+      ) && G.places[id]?.placeType !== "Mountain"
   );
   return result[0];
 }
 
-export function getDirSuppliedLines(G: GameState, player: P_ID): [CellID[], CellID[][][]] {
+export function getDirSuppliedLines(
+  G: GameState,
+  player: P_ID
+): [CellID[], CellID[][][]] {
   //get arsenals CId and relays CId
-  const arsenalLst = filterCId(G.places, (str) => str.belong === player && str.placeType === 'Arsenal');
-  const relayLst = filterCId(G.cells, (obj) => obj.belong === player && obj.objType === 'Relay');
+  const arsenalLst = filterCId(
+    G.places,
+    (str) =>
+      (str.belong === player ||
+        G.alliances[player].includes(str.belong as P_ID)) &&
+      str.placeType === "Arsenal"
+  );
+  const relayLst = filterCId(
+    G.cells,
+    (obj) =>
+      (obj.belong === player || G.alliances[player].includes(obj.belong)) &&
+      obj.objType === "Relay"
+  );
   // get direct supply lines
   let dirSuppliedLines = arsenalLst.map((aId) => dirSupplyFrom(G, aId, player));
   let dirSupplied = dirSuppliedLines.flat(2);
   let dirRelayLst = [];
   //if relay is on direct, then add more supply lines, iterate as many times as relay units on has
-  for (let i = 0; i < 2; i++) {
+  const relayLimit = 3; //how many times supply can be relayed
+  for (let i = 0; i < relayLimit; i++) {
     dirRelayLst = relayLst.filter((rId) => dirSupplied.includes(rId));
-    dirSuppliedLines = dirSuppliedLines.concat(dirRelayLst.map((rId) => dirSupplyFrom(G, rId, player)));
+    dirSuppliedLines = dirSuppliedLines.concat(
+      dirRelayLst.map((rId) => dirSupplyFrom(G, rId, player))
+    );
     dirSupplied = dirSuppliedLines.flat(2);
   }
 
@@ -794,7 +965,9 @@ export function getSuppliedCells(G: GameState, player: P_ID): CellID[] {
   const dirSupplied = getDirSuppliedLines(G, player)[0];
   //get the connected component of supplied pieces
   const myPieceLst = filterCId(G.cells, (obj) => obj.belong === player);
-  const myPieceDirSupplied = myPieceLst.filter((id) => dirSupplied.includes(id));
+  const myPieceDirSupplied = myPieceLst.filter((id) =>
+    dirSupplied.includes(id)
+  );
 
   const mySuppliedPieces = connectedComponents(myPieceLst, myPieceDirSupplied);
   return mySuppliedPieces;
@@ -802,15 +975,21 @@ export function getSuppliedCells(G: GameState, player: P_ID): CellID[] {
 
 //Game Object
 
-type ObjType = 'Infantry' | 'Cavalry' | 'Artillery' | 'Swift_Artillery' | 'Relay' | 'Swift_Relay';
+type ObjType =
+  | "Infantry"
+  | "Cavalry"
+  | "Artillery"
+  | "Swift_Artillery"
+  | "Relay"
+  | "Swift_Relay";
 
 export const objTypeList: readonly ObjType[] = [
-  'Infantry',
-  'Cavalry',
-  'Artillery',
-  'Swift_Artillery',
-  'Relay',
-  'Swift_Relay',
+  "Infantry",
+  "Cavalry",
+  "Artillery",
+  "Swift_Artillery",
+  "Relay",
+  "Swift_Relay",
 ];
 interface ObjData {
   readonly typeName: ObjType;
@@ -833,9 +1012,9 @@ type Type2ObjData = {
 };
 export const objDataList: Type2ObjData = {
   Infantry: {
-    typeName: 'Infantry',
-    objType: 'Infantry',
-    objRender: '💂',
+    typeName: "Infantry",
+    objType: "Infantry",
+    objRender: "💂",
     speed: 1,
     range: 2,
     offense: 4,
@@ -843,9 +1022,9 @@ export const objDataList: Type2ObjData = {
     canAddDef: true,
   },
   Cavalry: {
-    typeName: 'Cavalry',
-    objType: 'Cavalry',
-    objRender: '🏇',
+    typeName: "Cavalry",
+    objType: "Cavalry",
+    objRender: "🏇",
     speed: 2,
     range: 2,
     offense: 4,
@@ -853,9 +1032,9 @@ export const objDataList: Type2ObjData = {
     canAddDef: false,
   },
   Artillery: {
-    typeName: 'Artillery',
-    objType: 'Artillery',
-    objRender: '🎉',
+    typeName: "Artillery",
+    objType: "Artillery",
+    objRender: "🎉",
     speed: 1,
     range: 3,
     offense: 5,
@@ -863,9 +1042,9 @@ export const objDataList: Type2ObjData = {
     canAddDef: true,
   },
   Swift_Artillery: {
-    typeName: 'Swift_Artillery',
-    objType: 'Artillery',
-    objRender: '🚀',
+    typeName: "Swift_Artillery",
+    objType: "Artillery",
+    objRender: "🚀",
     speed: 2,
     range: 3,
     offense: 5,
@@ -873,9 +1052,9 @@ export const objDataList: Type2ObjData = {
     canAddDef: true,
   },
   Relay: {
-    typeName: 'Relay',
-    objType: 'Relay',
-    objRender: '🚩',
+    typeName: "Relay",
+    objType: "Relay",
+    objRender: "🚩",
     speed: 1,
     range: 0,
     offense: 0,
@@ -883,9 +1062,9 @@ export const objDataList: Type2ObjData = {
     canAddDef: false,
   },
   Swift_Relay: {
-    typeName: 'Swift_Relay',
-    objType: 'Relay',
-    objRender: '🚚',
+    typeName: "Swift_Relay",
+    objType: "Relay",
+    objRender: "🚚",
     speed: 2,
     range: 0,
     offense: 0,
@@ -904,8 +1083,13 @@ export function newPiece(type: ObjType, be: P_ID): ObjInstance {
   };
 }
 
-type StrongholdType = 'Arsenal' | 'Fortress' | 'Pass' | 'Mountain';
-export const strongholdTypeList: readonly StrongholdType[] = ['Arsenal', 'Fortress', 'Pass', 'Mountain'];
+type StrongholdType = "Arsenal" | "Fortress" | "Pass" | "Mountain";
+export const strongholdTypeList: readonly StrongholdType[] = [
+  "Arsenal",
+  "Fortress",
+  "Pass",
+  "Mountain",
+];
 interface Stronghold {
   readonly placeType: StrongholdType;
   readonly defenseAdd: number;
@@ -913,7 +1097,10 @@ interface Stronghold {
   belong: P_ID | null;
 }
 
-export function newStronghold(type: StrongholdType, belong: P_ID | null = null): Stronghold {
+export function newStronghold(
+  type: StrongholdType,
+  belong: P_ID | null = null
+): Stronghold {
   return {
     placeType: type,
     defenseAdd: renderPlaceByType(type)[1],
@@ -923,15 +1110,15 @@ export function newStronghold(type: StrongholdType, belong: P_ID | null = null):
 }
 export function renderPlaceByType(t: StrongholdType): [string, number] {
   switch (
-  t //render and def Add
+    t //render and def Add
   ) {
-    case 'Arsenal':
-      return ['🎪', 0];
-    case 'Pass':
-      return ['🛣️', 2];
-    case 'Fortress':
-      return ['🏰', 4];
-    case 'Mountain':
-      return ['⛰️', 0];
+    case "Arsenal":
+      return ["🎪", 0];
+    case "Pass":
+      return ["🛣️", 2];
+    case "Fortress":
+      return ["🏰", 4];
+    case "Mountain":
+      return ["⛰️", 0];
   }
 }
