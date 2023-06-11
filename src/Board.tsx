@@ -537,32 +537,31 @@ export const Board = ({
           style={{ cursor: "pointer" }}*/
         >
           {G.players.map((player) => (
-            <div
-              className="player-units"
-              style={{ cursor: "pointer" }}
-              onClick={(e) => {
-                if (!e.defaultPrevented)
-                  events.endTurn && events.endTurn({ next: player.id });
-              }}
-            >
+            <div className="player-units" style={{ cursor: "pointer" }}>
               <input
                 type="checkbox"
                 checked={supplyVisible.includes(player.id)}
                 onChange={(e) => {
-                  e.preventDefault();
-                  if (supplyVisible.includes(player.id))
+                  if (e.target.checked)
+                    setSupplyVisible(supplyVisible.concat([player.id]));
+                  else
                     setSupplyVisible(
                       supplyVisible.filter((id) => id !== player.id)
                     );
-                  else setSupplyVisible(supplyVisible.concat([player.id]));
                 }}
               ></input>
-              {player.name}
-              {overAllUnits(player.id)}
-              Allies:
-              {G.alliances[player.id].map((allyID) =>
-                spanBGColor(<>🕊️</>, fictionColor(allyID))
-              )}
+              <span
+                onClick={() => {
+                  events.endTurn && events.endTurn({ next: player.id });
+                }}
+              >
+                {player.name}
+                {overAllUnits(player.id)}
+                Allies:
+                {G.alliances[player.id].map((allyID) =>
+                  spanBGColor(<>🕊️</>, fictionColor(allyID))
+                )}
+              </span>
               <br />
             </div>
           ))}
