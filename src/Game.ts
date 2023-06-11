@@ -1,7 +1,7 @@
 import { Ctx, Game } from "boardgame.io";
 import { INVALID_MOVE } from "boardgame.io/core";
 
-export type P_ID = "0" | "1" | "2";
+export type P_ID = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7";
 
 export type CellID = number;
 
@@ -14,7 +14,17 @@ export interface GameState {
   moveRecords: { [key in P_ID]: [CellID, CellID][] }; //(stCId,edCId)
   attackRecords: { [key in P_ID]: [CellID, ObjInstance | "Arsenal"] | null };
   forcedRetreat: { [key in P_ID]: [CellID | null, CellID | null] }; //the start and end of retreat CId,
-  controlArea: { control: P_ID; "0": number; "1": number; "2": number }[]; //control player, reldef of players
+  controlArea: {
+    control: P_ID;
+    "0": number;
+    "1": number;
+    "2": number;
+    "3": number;
+    "4": number;
+    "5": number;
+    "6": number;
+    "7": number;
+  }[]; //control player, reldef of players
 }
 export function dualPlayerID(id: P_ID) {
   switch (id) {
@@ -23,6 +33,16 @@ export function dualPlayerID(id: P_ID) {
     case "1":
       return "2";
     case "2":
+      return "3";
+    case "3":
+      return "4";
+    case "4":
+      return "5";
+    case "5":
+      return "6";
+    case "6":
+      return "7";
+    case "7":
       return "0";
   }
 }
@@ -410,20 +430,57 @@ export function loadGame(fen: string, ctx: Ctx): GameState {
   let myGame: GameState = {
     players: [
       { id: "0", name: "North" },
-      { id: "1", name: "East" },
+      { id: "1", name: "West" },
       { id: "2", name: "South" },
+      { id: "3", name: "East" },
+      { id: "4", name: "Up" },
+      { id: "5", name: "Down" },
+      { id: "6", name: "Left" },
+      { id: "7", name: "Right" },
     ],
-    alliances: { "0": ["2"], "1": ["2"], "2": ["0", "1"] },
+    alliances: {
+      "0": [],
+      "1": [],
+      "2": [],
+      "3": [],
+      "4": [],
+      "5": [],
+      "6": [],
+      "7": [],
+    },
     cells: deCells,
     places: dePlaces,
     inSupply: {
       "0": Array(BoardSize.mx * BoardSize.my).fill(false),
       "1": Array(BoardSize.mx * BoardSize.my).fill(false),
       "2": Array(BoardSize.mx * BoardSize.my).fill(false),
+      "3": Array(BoardSize.mx * BoardSize.my).fill(false),
+      "4": Array(BoardSize.mx * BoardSize.my).fill(false),
+      "5": Array(BoardSize.mx * BoardSize.my).fill(false),
+      "6": Array(BoardSize.mx * BoardSize.my).fill(false),
+      "7": Array(BoardSize.mx * BoardSize.my).fill(false),
     },
-    moveRecords: { 0: [], 1: [], 2: [] },
-    attackRecords: { 0: null, 1: null, 2: null },
-    forcedRetreat: { 0: [null, null], 1: [null, null], 2: [null, null] },
+    moveRecords: { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [] },
+    attackRecords: {
+      0: null,
+      1: null,
+      2: null,
+      3: null,
+      4: null,
+      5: null,
+      6: null,
+      7: null,
+    },
+    forcedRetreat: {
+      0: [null, null],
+      1: [null, null],
+      2: [null, null],
+      3: [null, null],
+      4: [null, null],
+      5: [null, null],
+      6: [null, null],
+      7: [null, null],
+    },
     controlArea: Array((BoardSize.mx * BoardSize.my) / 2)
       .fill({ control: "0", "0": 0, "1": 0 })
       .concat(
@@ -486,7 +543,8 @@ export const onlyMap =
 //default game
 const game0 =
   // "|32|🏰|6|🎪.0|19|⛰️|⛰️|⛰️|⛰️|14|🚩.0|4|🎪.0|1|⛰️|24|⛰️|19|🚚.0|4|💂.0/🛣️.0|17|🏇.0|🏇.0|1|💂.0|💂.0|🎉.0|💂.0|⛰️|17|🏇.0|🏇.0|💂.0|🚀.0|💂.0|💂.0|💂.0|⛰️|10|🏰|9|💂.0|3|⛰️|2|🏰|51|💂.1|💂.1|💂.1|🎉.1|🏇.1|20|💂.1/🏰.1|💂.1|💂.1|🏇.1|🏇.1|8|🏰|11|💂.1|💂.1|💂.1|🏇.1|17|⛰️|⛰️|⛰️|⛰️|⛰️|⛰️|🚚.1|23|🚀.1/🛣️.1|6|🚩.1/🏰.1|17|⛰️|24|⛰️|24|⛰️|36|🎪.1|19|🎪.1|";
-  "|32|🏰|6|🎪.0|19|⛰️|⛰️|⛰️|⛰️|14|🚩.0|4|🎪.0|1|⛰️|24|⛰️|19|🚚.0|4|💂.0/🛣️.0|17|🏇.0|🏇.0|1|💂.0|💂.0|🎉.0|💂.0|⛰️|17|🏇.0|🏇.0|💂.0|🚀.0|💂.0|💂.0|💂.0|⛰️|10|🏰|9|💂.0|3|⛰️|2|🏰|51|💂.1|💂.1|💂.1|🎉.1|🏇.1|20|💂.1/🏰.1|💂.1|💂.1|🏇.1|🏇.1|8|🏰|11|💂.1|💂.1|💂.1|🏇.1|17|⛰️|⛰️|⛰️|⛰️|⛰️|⛰️|🚚.1|23|🚀.1/🛣️.1|6|🚩.1/🏰.1|17|⛰️|24|⛰️|24|⛰️|36|🎪.1|19|🎪.1|70|🎪.2|101|💂.2|101|💂.0";
+  "|15|🎪.0|42|🏰|18|🏇.3|2|🚩.3|6|🚀.3|2|🎪.3|19|⛰️|⛰️|⛰️|⛰️|13|🏇.3|11|💂.3|💂.3|12|🚩.0|4|🎪.0|1|⛰️|15|🚚.3|🏇.3|🎪.3|3|🎉.3|⛰️|💂.3/🛣️.3|⛰️|⛰️|⛰️|1|💂.3|💂.3|19|⛰️|16|🏇.3|4|⛰️|💂.3/🛣️.3|⛰️|4|💂.3|💂.3|14|🚚.0|4|💂.0/🛣️.0|20|⛰️|💂.3/🛣️.3|⛰️|13|⛰️|5|🏇.0|🏇.0|1|💂.0|💂.0|🎉.0|💂.0|⛰️|20|⛰️|⛰️|9|🏰|3|⛰️|6|🏇.0|🏇.0|💂.0|🚀.0|💂.0|💂.0|💂.0|⛰️|11|🏰|8|⛰️|4|🏰|8|⛰️|10|💂.0|3|⛰️|2|🏰|17|⛰️|13|⛰️|⛰️|49|⛰️|18|💂.1|💂.1|💂.1|🎉.1|🏇.1|24|🏇.2|20|💂.1|💂.1|💂.1|🏇.1|🏇.1|15|🚩.2|6|🏇.2|🏇.2|🏇.2|🚚.2|6|🏰|12|💂.1|💂.1|💂.1|🏇.1|15|💂.2|💂.2|💂.2|4|🚀.2|20|⛰️|⛰️|⛰️|⛰️|⛰️|🚚.1|13|💂.2|💂.2|💂.2|💂.2|💂.2|20|🎪.1|9|🚀.1/🛣️.1|6|🚩.1/🏰|7|💂.2|1|⛰️|18|⛰️|13|⛰️|14|🎉.2|1|⛰️|18|⛰️|13|⛰️|3|🎪.1|9|🎪.2|2|⛰️|6|🎪.2|10|⛰️|🛣️|⛰️|12|⛰️|16|⛰️|18|⛰️|30|🛣️|8|🏰|18|🏰|18|⛰️|⛰️|⛰️|⛰️|47|🚚.5|15|🏰|11|⛰️|10|🏰|32|🏰|4|⛰️|48|⛰️|28|💂.5|💂.5|💂.5|18|⛰️|9|🎪.4|💂.4|🏇.4|8|🏰|1|🏇.5|🏇.5|🏇.5|🏇.5|💂.5|💂.5|1|🎪.5|3|💂.5|💂.5|1|🚩.5|6|🚚.4|1|🚀.4|3|🛣️|2|🎉.4|5|💂.4|💂.4|💂.4|🏇.4|2|🚩.4|10|🎉.5|⛰️|🚀.5|5|💂.5|💂.5|10|🏇.4|🏇.4|2|⛰️|10|💂.4|12|🎪.5|2|⛰️|22|⛰️|26|⛰️|19|🎪.4|48|💂.4|💂.4|💂.4|💂.4|68|🏰|18|🏰|17|🏰|28|⛰️|38|🚚.7|1|💂.7|3|🚩.7|⛰️|⛰️|⛰️|⛰️|⛰️|🏇.7|9|🏰|24|💂.7|💂.7|💂.7|2|💂.7|💂.7|1|🚀.7|6|🏇.7|17|🚩.6|4|🚚.6|3|💂.6|💂.6|6|💂.7|💂.7|13|🏇.7|10|⛰️|⛰️|⛰️|3|🏇.6|🏇.6|8|🚀.6|💂.6|6|💂.7|3|🎉.7|1|🎪.7|8|🏇.7|6|⛰️|💂.6|💂.6|💂.6|5|🏇.6|🏇.6|10|💂.6|💂.6|💂.6|6|⛰️|19|⛰️|1|🎉.6|27|⛰️|14|🎪.7|4|⛰️|19|🎪.6|9|⛰️|17|⛰️|1|⛰️|5|🎪.6|23|🛣️|18|⛰️|";
+
 //Pump House
 const game1 =
   "|32|🏰|6|🎪.0|19|⛰️|⛰️|⛰️|⛰️|19|🎪.0|1|⛰️|24|⛰️|💂.0|23|💂.0/🛣️.0|🎉.0|23|⛰️|🚩.0|💂.0|16|🚚.0|🏇.0|🏇.0|💂.0|1|💂.0|⛰️|10|🏰|8|🏇.0|🚀.0|1|💂.0|1|⛰️|2|🏰|16|🏇.0|1|💂.0|💂.0|💂.0|55|🏰|12|🏰|17|🏇.1|🏇.1|🏇.1|12|⛰️|⛰️|⛰️|⛰️|⛰️|⛰️|💂.1|🎉.1|💂.1|💂.1|🚀.1|🏇.1|🚚.1|17|💂.1/🛣️.1|1|🚩.1|💂.1|💂.1|💂.1|1|💂.1/🏰.1|17|⛰️|4|💂.1|19|⛰️|24|⛰️|36|🎪.1|19|🎪.1|";
@@ -546,22 +604,29 @@ function update(G: GameState, ctx: Ctx) {
 }
 
 function updateSuppliedCells(G: GameState, player?: P_ID) {
+  G.players.forEach((player) => {
+    const SuppliedCells = getSuppliedCells(G, player.id);
+    G.inSupply[player.id] = SuppliedCells;
+  });
+  /*
   if (player !== "1") {
     const SuppliedCells0 = getSuppliedCells(G, "0");
     G.inSupply[0] = SuppliedCells0;
   }
+
 
   if (player !== "0") {
     const SuppliedCells1 = getSuppliedCells(G, "1");
 
     G.inSupply[1] = SuppliedCells1;
   }
+  
 
   if (player !== "2") {
     const SuppliedCells2 = getSuppliedCells(G, "2");
 
     G.inSupply[2] = SuppliedCells2;
-  }
+  }*/
 
   updateSuppliedObj(G);
 }
@@ -580,6 +645,11 @@ function updateControlArea(G: GameState) {
     const relDef0 = getRelDef(G, CId, "0");
     const relDef1 = getRelDef(G, CId, "1");
     const relDef2 = getRelDef(G, CId, "2");
+    const relDef3 = getRelDef(G, CId, "3");
+    const relDef4 = getRelDef(G, CId, "4");
+    const relDef5 = getRelDef(G, CId, "5");
+    const relDef6 = getRelDef(G, CId, "6");
+    const relDef7 = getRelDef(G, CId, "7");
     let newControl = area.control;
     if (relDef0 > relDef1) {
       newControl = "0";
@@ -591,7 +661,17 @@ function updateControlArea(G: GameState) {
     if (obj) {
       newControl = obj.belong;
     }
-    return { control: newControl, "0": relDef0, "1": relDef1, "2": relDef2 };
+    return {
+      control: newControl,
+      "0": relDef0,
+      "1": relDef1,
+      "2": relDef2,
+      "3": relDef3,
+      "4": relDef4,
+      "5": relDef5,
+      "6": relDef6,
+      "7": relDef7,
+    };
   });
 }
 

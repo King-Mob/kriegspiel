@@ -37,13 +37,21 @@ export const Board = ({
     props.playerID !== null ? props.playerID : ctx.currentPlayer
   ) as P_ID;
   const opponentID = dualPlayerID(myID);
-  //const [currentPlayer, setCurrentPlayer] = useState<P_ID>("0");
   const currentPlayer = ctx.currentPlayer as P_ID;
-  //const currentPlayer = props.playerID;
   const [pickedID, pickUpID] = useState<CellID | null>(null);
   const editMode = ctx.activePlayers?.[myID] === "edition";
   const opEditMode = ctx.activePlayers?.[opponentID] === "edition";
   const [turfMode, setTurfMode] = useState(false);
+  const [supplyVisible, setSupplyVisible] = useState<P_ID[]>([
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+  ]);
 
   function pickedData(pId: CellID | null) {
     if (pId !== null && canPick(G, ctx, pId) && isActive) {
@@ -222,7 +230,7 @@ export const Board = ({
           drawLine(
             line[0],
             line[line.length - 1],
-            fictionColor(pId),
+            supplyVisible.includes(pId) ? fictionColor(pId) : "rgba(0,0,0,0)",
             0.05,
             "0.4, 0.1"
           ),
@@ -362,6 +370,11 @@ export const Board = ({
         {drawAllSupplyLines("0")}
         {drawAllSupplyLines("1")}
         {drawAllSupplyLines("2")}
+        {drawAllSupplyLines("3")}
+        {drawAllSupplyLines("4")}
+        {drawAllSupplyLines("5")}
+        {drawAllSupplyLines("6")}
+        {drawAllSupplyLines("7")}
 
         {/* stronghold */}
         {renderLayer(
@@ -515,7 +528,7 @@ export const Board = ({
       {/* how many units left */}
 
       <p>
-        <label>Players:</label>
+        <label>Players: (Select active)</label>
 
         <div
         /*  onClick={() => {
@@ -527,10 +540,23 @@ export const Board = ({
             <div
               className="player-units"
               style={{ cursor: "pointer" }}
-              onClick={() => {
-                events.endTurn && events.endTurn({ next: player.id });
+              onClick={(e) => {
+                if (!e.defaultPrevented)
+                  events.endTurn && events.endTurn({ next: player.id });
               }}
             >
+              <input
+                type="checkbox"
+                checked={supplyVisible.includes(player.id)}
+                onChange={(e) => {
+                  e.preventDefault();
+                  if (supplyVisible.includes(player.id))
+                    setSupplyVisible(
+                      supplyVisible.filter((id) => id !== player.id)
+                    );
+                  else setSupplyVisible(supplyVisible.concat([player.id]));
+                }}
+              ></input>
               {player.name}
               {overAllUnits(player.id)}
               Allies:
@@ -542,7 +568,6 @@ export const Board = ({
           ))}
         </div>
         {/*<label>(click to toggle Turf View)</label>*/}
-        <label>Select active player</label>
       </p>
 
       {/* turn info */}
@@ -566,7 +591,7 @@ export const Board = ({
       <p>{getWinner()}</p>
 
       {/* action info */}
-      <label>My Moves and Attack:</label>
+      <label>My Moves and Attack: (click to undo)</label>
       <svg viewBox="-0.1 -0.1 6.2 1.2" onClick={props.undo} cursor="pointer">
         {renderLayer((_, id) => {
           const moveEdRec = G.moveRecords[myID].map((p) => p[1]);
@@ -574,6 +599,7 @@ export const Board = ({
           if (id < 5) {
             const edCId = moveEdRec[id];
             const edObj = G.cells[edCId];
+            console.log(G.attackRecords[myID]);
             //render moved pieces, if attacked, then can not move anymore
             return (
               <>
@@ -607,11 +633,39 @@ export const Board = ({
           }
         }, Array(6).fill(null))}
       </svg>
-      <label>(click to undo)</label>
       {/* retreat info */}
       {G.forcedRetreat[currentPlayer][0] !== null && (
         <p>🏃‍♂️💥 I must retreat my unit from attack first.</p>
       )}
+
+      <div>
+        <label>Turn output:</label>
+        <input
+          id="turn-output"
+          type="text"
+          placeholder="Turn text"
+          value={
+            G.moveRecords[myID].join(";") +
+            ` | Attack:${formatAttack(G.attackRecords[myID])}`
+          }
+          readOnly
+        ></input>
+        <button
+          onClick={(event) => {
+            const copyText = document.getElementById(
+              "turn-output"
+            ) as HTMLInputElement;
+            // Select the text field
+            if (copyText) {
+              copyText.select();
+              copyText.setSelectionRange(0, 99999); // For mobile devices
+              navigator.clipboard.writeText(copyText.value);
+            }
+          }}
+        >
+          Copy
+        </button>
+      </div>
 
       {/* chosen piece info */}
 
@@ -816,6 +870,11 @@ export const Board = ({
     </div>
   );
 
+  function formatAttack(attackText: [number, ObjInstance | "Arsenal"] | null) {
+    if (attackText) return attackText[0];
+    else return "none";
+  }
+
   //get winner
   function getWinner() {
     if (ctx.gameover) {
@@ -977,15 +1036,27 @@ function fictionColor(pID: P_ID) {
       return pico8Palette.orange;
     case "2":
       return pico8Palette.pink;
+    case "3":
+      return pico8Palette.green;
+    case "4":
+      return pico8Palette.purple;
+    case "5":
+      return pico8Palette.brown;
+    case "6":
+      return pico8Palette.cyan;
+    case "7":
+      return pico8Palette.yellow;
   }
 }
 
 const pico8Palette = {
   black: "#00000",
+  cyan: "#00ffff",
   dark_blue: "#1d2b53",
   dark_purple: "#7e2553",
   dark_green: "#008751",
   brown: "#ab5236",
+  purple: "#cf04ba",
   dark_grey: "#5f574f",
   light_grey: "#c2c3c7",
   very_light_grey: "#e3e3e3",
