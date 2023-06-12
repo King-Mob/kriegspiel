@@ -432,7 +432,7 @@ export function loadGame(fen: string, ctx: Ctx): GameState {
       { id: "0", name: "North" },
       { id: "1", name: "West" },
       { id: "2", name: "South" },
-      { id: "3", name: "East" },
+      { id: "3", name: "Ragnar the Fearless" },
       { id: "4", name: "Up" },
       { id: "5", name: "Down" },
       { id: "6", name: "Left" },
