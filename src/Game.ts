@@ -435,7 +435,7 @@ export function loadGame(fen: string, ctx: Ctx): GameState {
       { id: "3", name: "Ragnar the Fearless" },
       { id: "4", name: "Up" },
       { id: "5", name: "Right" },
-      { id: "6", name: "Left" },
+      { id: "6", name: "Elminster" },
       { id: "7", name: "Down" },
     ],
     alliances: {
