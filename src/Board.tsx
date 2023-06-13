@@ -1023,7 +1023,15 @@ function drawLine(
 
 function spanBGColor(jsx: React.ReactNode, color: string) {
   return (
-    <span style={{ backgroundColor: color, whiteSpace: "normal" }}>{jsx}</span>
+    <span
+      style={{
+        backgroundColor: color,
+        whiteSpace: "normal",
+        color: color === "#000000" ? "white" : "black",
+      }}
+    >
+      {jsx}
+    </span>
   );
 }
 
