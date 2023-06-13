@@ -429,7 +429,7 @@ export function loadGame(fen: string, ctx: Ctx): GameState {
   const dePlaces = loadPlaces(fen);
   let myGame: GameState = {
     players: [
-      { id: "0", name: "North" },
+      { id: "0", name: "Count Guibert" },
       { id: "1", name: "West" },
       { id: "2", name: "South" },
       { id: "3", name: "Ragnar the Fearless" },
