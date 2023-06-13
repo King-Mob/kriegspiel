@@ -431,7 +431,7 @@ export function loadGame(fen: string, ctx: Ctx): GameState {
     players: [
       { id: "0", name: "Count Guibert" },
       { id: "1", name: "West" },
-      { id: "2", name: "South" },
+      { id: "2", name: "Southern Snowcones" },
       { id: "3", name: "Ragnar the Fearless" },
       { id: "4", name: "Up" },
       { id: "5", name: "Right" },

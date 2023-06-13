@@ -1042,7 +1042,7 @@ function fictionColor(pID: P_ID) {
     case "1":
       return pico8Palette.orange;
     case "2":
-      return pico8Palette.pink;
+      return pico8Palette.yellow;
     case "3":
       return pico8Palette.green;
     case "4":
