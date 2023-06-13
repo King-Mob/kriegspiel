@@ -436,7 +436,7 @@ export function loadGame(fen: string, ctx: Ctx): GameState {
       { id: "4", name: "Up" },
       { id: "5", name: "Right" },
       { id: "6", name: "Elminster" },
-      { id: "7", name: "Down" },
+      { id: "7", name: "House of Haltwhistle" },
     ],
     alliances: {
       "0": [],
