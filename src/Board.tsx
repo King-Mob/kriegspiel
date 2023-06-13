@@ -1049,7 +1049,7 @@ function fictionColor(pID: P_ID) {
 }
 
 const pico8Palette = {
-  black: "#00000",
+  black: "#000000",
   cyan: "#00ffff",
   dark_blue: "#1d2b53",
   dark_purple: "#7e2553",
