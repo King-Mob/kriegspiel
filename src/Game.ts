@@ -433,7 +433,7 @@ export function loadGame(fen: string, ctx: Ctx): GameState {
       { id: "1", name: "West (available)" },
       { id: "2", name: "Southern Snowcones" },
       { id: "3", name: "Ragnar the Fearless" },
-      { id: "4", name: "Up (available)" },
+      { id: "4", name: "The Rabble" },
       { id: "5", name: "The Eyeballs" },
       { id: "6", name: "Elminster" },
       { id: "7", name: "House of Haltwhistle" },
