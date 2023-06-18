@@ -430,7 +430,7 @@ export function loadGame(fen: string, ctx: Ctx): GameState {
   let myGame: GameState = {
     players: [
       { id: "0", name: "Count Guibert" },
-      { id: "1", name: "West (available)" },
+      { id: "1", name: "TBD" },
       { id: "2", name: "Southern Snowcones" },
       { id: "3", name: "Ragnar the Fearless" },
       { id: "4", name: "The Rabble" },
