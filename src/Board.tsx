@@ -738,6 +738,29 @@ export const Board = ({
       {/* combat factors */}
       <label>Total Combat Factors:</label>
       {battleFactorTable(pickedID)}
+      <label>Turn input:</label>
+      <input id="turn-input" type="text" placeholder="Turn text"></input>
+      <button
+        onClick={(event) => {
+          const turnText = document.getElementById(
+            "turn-input"
+          ) as HTMLInputElement;
+
+          const [moveText, attackText] = turnText.value.split(" | Attack:");
+          const moveList = moveText.split(";");
+
+          moveList.forEach((move) => {
+            const [startSquare, endSquare] = move.split(",");
+            moves.movePiece(parseInt(startSquare), parseInt(endSquare));
+          });
+
+          if (attackText !== "none") {
+            moves.attack(parseInt(attackText));
+          }
+        }}
+      >
+        Make Move
+      </button>
     </div>
   );
   // editor
@@ -1042,7 +1065,7 @@ function fictionColor(pID: P_ID) {
     case "1":
       return pico8Palette.orange;
     case "2":
-      return pico8Palette.yellow;
+      return pico8Palette.dark_yellow;
     case "3":
       return pico8Palette.green;
     case "4":
@@ -1071,6 +1094,7 @@ const pico8Palette = {
   red: "#ff004d",
   orange: "#ffa300",
   yellow: "#ffec27",
+  dark_yellow: "#d0cc0a",
   green: "#00e436",
   blue: "#29adff",
   lavender: "#83769c",
