@@ -224,7 +224,10 @@ export const Board = ({
   function drawOneSupplyLine(line: CellID[], pId: P_ID) {
     {
       const offset = pId === "0" ? -0.05 : 0.05;
+      const originIsSameFaction = G.cells[line[0]]?.belong === pId;
+
       return (
+        originIsSameFaction &&
         line.length > 1 &&
         gTranslate(
           drawLine(

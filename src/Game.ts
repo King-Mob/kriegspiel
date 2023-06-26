@@ -1028,7 +1028,7 @@ export function getDirSuppliedLines(
   let dirSupplied = dirSuppliedLines.flat(2);
   let dirRelayLst = [];
   //if relay is on direct, then add more supply lines, iterate as many times as relay units on has
-  const relayLimit = 3; //how many times supply can be relayed
+  const relayLimit = 4; //how many times supply can be relayed
   for (let i = 0; i < relayLimit; i++) {
     dirRelayLst = relayLst.filter((rId) => dirSupplied.includes(rId));
     dirSuppliedLines = dirSuppliedLines.concat(
