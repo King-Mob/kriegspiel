@@ -452,8 +452,50 @@ export const Board = ({
     </svg>
   );
 
-  //render Battle info UI
   function battleFactorTable(id: CellID | null) {
+    if (id === null) {
+      return null;
+    }
+
+    const players: P_ID[] = ["0", "1", "2", "3", "4", "5", "6", "7"];
+    const playersWithCombatFactor = players.filter(
+      (playerId) =>
+        getBattleFactor(G, playerId, true, id)[0] !== 0 ||
+        getBattleFactor(G, playerId, false, id)[0] !== 0
+    );
+
+    return (
+      <table style={{ marginLeft: "auto", marginRight: "auto" }}>
+        <tr>
+          {playersWithCombatFactor.map((playerId) => (
+            <td
+              style={{
+                backgroundColor: fictionColor(playerId),
+                color: fictionColor(playerId) === "#000000" ? "white" : "black",
+              }}
+            >
+              Atk: {getBattleFactor(G, playerId, true, id)[0]}
+            </td>
+          ))}
+        </tr>
+        <tr>
+          {playersWithCombatFactor.map((playerId) => (
+            <td
+              style={{
+                backgroundColor: fictionColor(playerId),
+                color: fictionColor(playerId) === "#000000" ? "white" : "black",
+              }}
+            >
+              Def: {getBattleFactor(G, playerId, false, id)[0]}
+            </td>
+          ))}
+        </tr>
+      </table>
+    );
+  }
+
+  //render Battle info UI
+  function battleFactorTable2(id: CellID | null) {
     const nonNull = id !== null;
     const MyOff = nonNull ? getBattleFactor(G, myID, true, id)[0] : 0;
     const MyDef = nonNull ? getBattleFactor(G, myID, false, id)[0] : 0;
