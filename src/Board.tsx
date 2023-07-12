@@ -452,41 +452,46 @@ export const Board = ({
     </svg>
   );
 
+  //render Battle info UI
   function battleFactorTable(id: CellID | null) {
     if (id === null) {
       return null;
     }
 
     const players: P_ID[] = ["0", "1", "2", "3", "4", "5", "6", "7"];
-    const playersWithCombatFactor = players.filter(
-      (playerId) =>
-        getBattleFactor(G, playerId, true, id)[0] !== 0 ||
-        getBattleFactor(G, playerId, false, id)[0] !== 0
-    );
+    const playersWithCombatFactor = players
+      .map((playerId) => ({
+        id: playerId,
+        atk: getBattleFactor(G, playerId, true, id)[0],
+        def: getBattleFactor(G, playerId, false, id)[0],
+      }))
+      .filter((player) => player.atk !== 0 || player.def !== 0);
 
     return (
       <table style={{ marginLeft: "auto", marginRight: "auto" }}>
         <tr>
-          {playersWithCombatFactor.map((playerId) => (
+          {playersWithCombatFactor.map((player) => (
             <td
               style={{
-                backgroundColor: fictionColor(playerId),
-                color: fictionColor(playerId) === "#000000" ? "white" : "black",
+                backgroundColor: fictionColor(player.id),
+                color:
+                  fictionColor(player.id) === "#000000" ? "white" : "black",
               }}
             >
-              Atk: {getBattleFactor(G, playerId, true, id)[0]}
+              Atk: {player.atk}
             </td>
           ))}
         </tr>
         <tr>
-          {playersWithCombatFactor.map((playerId) => (
+          {playersWithCombatFactor.map((player) => (
             <td
               style={{
-                backgroundColor: fictionColor(playerId),
-                color: fictionColor(playerId) === "#000000" ? "white" : "black",
+                backgroundColor: fictionColor(player.id),
+                color:
+                  fictionColor(player.id) === "#000000" ? "white" : "black",
               }}
             >
-              Def: {getBattleFactor(G, playerId, false, id)[0]}
+              Def: {player.def}
             </td>
           ))}
         </tr>
@@ -494,8 +499,9 @@ export const Board = ({
     );
   }
 
+  /*
   //render Battle info UI
-  function battleFactorTable2(id: CellID | null) {
+  function battleFactorTable(id: CellID | null) {
     const nonNull = id !== null;
     const MyOff = nonNull ? getBattleFactor(G, myID, true, id)[0] : 0;
     const MyDef = nonNull ? getBattleFactor(G, myID, false, id)[0] : 0;
@@ -544,6 +550,7 @@ export const Board = ({
       </table>
     );
   }
+  */
   function offState(n: number) {
     if (n > 0) return "⚔️";
     else return "";
