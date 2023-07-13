@@ -1126,7 +1126,7 @@ function fictionColor(pID: P_ID) {
     case "5":
       return pico8Palette.brown;
     case "6":
-      return pico8Palette.cyan;
+      return pico8Palette.orange;
     case "7":
       return pico8Palette.black;
   }

@@ -435,7 +435,7 @@ export function loadGame(fen: string, ctx: Ctx): GameState {
       { id: "3", name: "Ragnar the Fearless" },
       { id: "4", name: "The Rabble" },
       { id: "5", name: "The Eyeballs" },
-      { id: "6", name: "Leaderless" },
+      { id: "6", name: "Michiel de Ruyter" },
       { id: "7", name: "House of Haltwhistle" },
     ],
     alliances: {
