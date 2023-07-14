@@ -600,7 +600,7 @@ function update(G: GameState, ctx: Ctx) {
       }
     }
   });
-  updateControlArea(G);
+  //updateControlArea(G);
 }
 
 function updateSuppliedCells(G: GameState, player?: P_ID) {
@@ -639,6 +639,7 @@ function updateSuppliedObj(G: GameState) {
     }
   });
 }
+/*
 function updateControlArea(G: GameState) {
   const oldArea = G.controlArea;
   G.controlArea = oldArea.map((area, CId) => {
@@ -674,6 +675,7 @@ function updateControlArea(G: GameState) {
     };
   });
 }
+*/
 
 // Position and distance functions
 
@@ -781,23 +783,69 @@ export function canPut(G: GameState, ctx: Ctx, stCId: CellID, edCId: CellID) {
   return obj !== null && moveRange(G, stCId, obj.speed).includes(edCId);
 }
 function moveRange(G: GameState, stCId: CellID, speed: number = 1): CellID[] {
-  let result = [stCId];
-  for (let i = 0; i < speed; i++) {
-    //for each steps target cell is empty and is not mountain,
-    // first filter out further cells
-    // let result be 1 block larger
-    result = G.cells
-      .map((obj, id) =>
-        NaiveDistance(CId2Pos(stCId), CId2Pos(id)) <= speed &&
-        obj === null &&
-        G.places[id]?.placeType !== "Mountain" &&
-        ptSetDisLessThan(result, id)
-          ? id
-          : null
-      )
-      .filter(nonNull) as CellID[];
+  const reachableSquares = [];
+
+  if (speed === 0) {
+    reachableSquares.push(stCId);
   }
-  return result;
+
+  if (speed === 1) {
+    reachableSquares.push(
+      ...[
+        stCId - 51,
+        stCId - 50,
+        stCId - 49,
+        stCId - 1,
+        stCId,
+        stCId + 1,
+        stCId + 49,
+        stCId + 50,
+        stCId + 51,
+      ]
+    );
+  }
+
+  if (speed === 2) {
+    reachableSquares.push(
+      ...[
+        stCId - 102,
+        stCId - 101,
+        stCId - 100,
+        stCId - 99,
+        stCId - 98,
+        stCId - 52,
+        stCId - 51,
+        stCId - 50,
+        stCId - 49,
+        stCId - 48,
+        stCId - 2,
+        stCId - 1,
+        stCId,
+        stCId + 1,
+        stCId + 2,
+        stCId + 48,
+        stCId + 49,
+        stCId + 50,
+        stCId + 51,
+        stCId + 52,
+        stCId + 98,
+        stCId + 99,
+        stCId + 100,
+        stCId + 101,
+        stCId + 102,
+      ]
+    );
+  }
+
+  const possibleMove = reachableSquares.filter((cell) => cell >= 0);
+
+  return possibleMove
+    .map((id) => {
+      if (G.cells[id] === null && G.places[id]?.placeType !== "Mountain")
+        return id;
+      else return null;
+    })
+    .filter(nonNull) as CellID[];
 }
 
 export function canAttack(
@@ -962,7 +1010,7 @@ export function getBattleFactor(
     });
   const chargedAmount = chargedCavalries.length;
 
-  var addValue = 0;
+  let addValue = 0;
   //if it is offensive, merge objs in range and in charge
   if (targetObj && targetObj.belong !== player && isOffense) {
     // add and merge cavalries
