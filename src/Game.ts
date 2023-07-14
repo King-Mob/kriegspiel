@@ -919,9 +919,12 @@ function searchInMiShape(
 
 //battle value
 // get charged cavalry rows with relative positions.
-export function getChargedCavalries(G: GameState, CId: CellID): Position[][] {
+export function getChargedCavalries(
+  G: GameState,
+  CId: CellID,
+  player: P_ID | null
+): Position[][] {
   const obj = G.cells[CId];
-  const belong = obj?.belong;
   const placesType = G.places[CId]?.placeType;
 
   //the target not in a stronghold, and has piece on it
@@ -932,10 +935,10 @@ export function getChargedCavalries(G: GameState, CId: CellID): Position[][] {
       G,
       CId,
       (cObj, cCId) =>
-        //check cObj is a cavalry, a enemy, supplied,not retreating , not in a fortress
+        //check cObj is a cavalry, a enemy, supplied, not retreating, not in a fortress
         cObj !== null &&
         cObj.objType === "Cavalry" &&
-        cObj.belong !== belong &&
+        (cObj.belong === player || (!player && obj.belong !== cObj.belong)) &&
         cObj.supplied &&
         !cObj.retreating &&
         G.places[cCId]?.placeType !== "Fortress",
@@ -1002,7 +1005,7 @@ export function getBattleFactor(
     .reduce((a, b) => a + b, 0);
 
   //get charged cavalries
-  const chargedCavalries = getChargedCavalries(G, CId)
+  const chargedCavalries = getChargedCavalries(G, CId, player)
     .flat()
     .map((rPos) => {
       let aCId = Pos2CId(pos.x + rPos.x, pos.y + rPos.y);

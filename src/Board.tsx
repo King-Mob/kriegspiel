@@ -420,7 +420,7 @@ export const Board = ({
           (obj, id) => (
             <>
               {obj &&
-                getChargedCavalries(G, id).map((chargeRow) =>
+                getChargedCavalries(G, id, null).map((chargeRow) =>
                   chargeRow.map((pos, id, row) =>
                     gTranslate(
                       renderStr("⚡"),
