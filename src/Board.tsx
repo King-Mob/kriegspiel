@@ -397,6 +397,24 @@ export const Board = ({
         {G.moveRecords["1"].map(([st, ed]) =>
           drawLine(st, ed, pico8Palette.brown, 0.5, "0.3, 0.1")
         )}
+        {G.moveRecords["2"].map(([st, ed]) =>
+          drawLine(st, ed, pico8Palette.dark_yellow, 0.5, "0.3, 0.1")
+        )}
+        {G.moveRecords["3"].map(([st, ed]) =>
+          drawLine(st, ed, pico8Palette.dark_green, 0.5, "0.3, 0.1")
+        )}
+        {G.moveRecords["4"].map(([st, ed]) =>
+          drawLine(st, ed, pico8Palette.dark_purple, 0.5, "0.3, 0.1")
+        )}
+        {G.moveRecords["5"].map(([st, ed]) =>
+          drawLine(st, ed, pico8Palette.black, 0.5, "0.3, 0.1")
+        )}
+        {G.moveRecords["6"].map(([st, ed]) =>
+          drawLine(st, ed, pico8Palette.brown, 0.5, "0.3, 0.1")
+        )}
+        {G.moveRecords["7"].map(([st, ed]) =>
+          drawLine(st, ed, pico8Palette.black, 0.5, "0.3, 0.1")
+        )}
 
         {/* piece */}
         {renderLayer(
