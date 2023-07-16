@@ -424,7 +424,16 @@ export const Board = ({
           G.cells
         )}
         {/* attack */}
-        {[G.attackRecords["0"], G.attackRecords["1"]].map(
+        {[
+          G.attackRecords["0"],
+          G.attackRecords["1"],
+          G.attackRecords["2"],
+          G.attackRecords["3"],
+          G.attackRecords["4"],
+          G.attackRecords["5"],
+          G.attackRecords["6"],
+          G.attackRecords["7"],
+        ].map(
           (atk) =>
             atk !== null &&
             gTranslate(
@@ -593,6 +602,20 @@ export const Board = ({
     );
   }
   console.log(G, ctx);
+  console.log(G.attackRecords, G.moveRecords);
+  const moveRecordStrings: string[] = [];
+
+  Object.keys(G.moveRecords).forEach((playerId) => {
+    const move = G.moveRecords[playerId as P_ID];
+    let moveRecordString = "[";
+    move.forEach((unitMove) => {
+      moveRecordString += `[${unitMove[0]},${unitMove[1]}],`;
+    });
+    moveRecordString += "]";
+    moveRecordStrings.push(moveRecordString);
+  });
+
+  console.log(moveRecordStrings);
 
   const sideBarPlay = (
     <div id="PlayUI">
