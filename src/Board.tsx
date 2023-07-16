@@ -1051,7 +1051,7 @@ export const Board = ({
               </>
             )}
             More information{" "}
-            <a href="https://github.com/iamcxds/kriegspiel">here</a>.{" "}
+            <a href="https://github.com/king-mob/kriegspiel">here</a>.{" "}
             <input
               type="button"
               value="Edit Mode"
