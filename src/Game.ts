@@ -590,6 +590,8 @@ function decodeObj(s: string): ObjInstance | null {
         return newPiece("Infantry", be);
       case "🏇":
         return newPiece("Cavalry", be);
+      case "🐺":
+        return newPiece("Cavalry_Wolf", be);
       case "🎉":
         return newPiece("Artillery", be);
       case "🚀":
@@ -1195,6 +1197,7 @@ export function getSuppliedCells(G: GameState, player: P_ID): CellID[] {
 type ObjType =
   | "Infantry"
   | "Cavalry"
+  | "Cavalry_Wolf"
   | "Artillery"
   | "Swift_Artillery"
   | "Relay"
@@ -1203,6 +1206,7 @@ type ObjType =
 export const objTypeList: readonly ObjType[] = [
   "Infantry",
   "Cavalry",
+  "Cavalry_Wolf",
   "Artillery",
   "Swift_Artillery",
   "Relay",
@@ -1242,6 +1246,16 @@ export const objDataList: Type2ObjData = {
     typeName: "Cavalry",
     objType: "Cavalry",
     objRender: "🏇",
+    speed: 2,
+    range: 2,
+    offense: 4,
+    defense: 5,
+    canAddDef: false,
+  },
+  Cavalry_Wolf: {
+    typeName: "Cavalry_Wolf",
+    objType: "Cavalry",
+    objRender: "🐺",
     speed: 2,
     range: 2,
     offense: 4,
