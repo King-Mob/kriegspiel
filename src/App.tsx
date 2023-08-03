@@ -9,7 +9,7 @@ const KriegspielClient = Client({
   game: Kriegspiel,
   board: Board,
   debug: { collapseOnLoad: true },
-  numPlayers: 3,
+  numPlayers: 8,
 
   //SocketIO({ server: 'localhost:8000' })
   //multiplayer: Local({ bots: { "1": RandomBot } }),

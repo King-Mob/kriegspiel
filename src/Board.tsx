@@ -42,16 +42,13 @@ export const Board = ({
   const editMode = ctx.activePlayers?.[myID] === "edition";
   const opEditMode = ctx.activePlayers?.[opponentID] === "edition";
   const [turfMode, setTurfMode] = useState(false);
-  const [supplyVisible, setSupplyVisible] = useState<P_ID[]>([
-    "0",
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-  ]);
+  const localSupplyStorage = localStorage.getItem("supplyVisible");
+  const localSupply = localSupplyStorage
+    ? JSON.parse(localSupplyStorage)
+    : null;
+  const [supplyVisible, setSupplyVisible] = useState<P_ID[]>(
+    localSupply || ["0", "1", "2", "3", "4", "5", "6", "7"]
+  );
 
   function pickedData(pId: CellID | null) {
     if (pId !== null && canPick(G, ctx, pId) && isActive) {
@@ -636,12 +633,23 @@ export const Board = ({
                 type="checkbox"
                 checked={supplyVisible.includes(player.id)}
                 onChange={(e) => {
-                  if (e.target.checked)
-                    setSupplyVisible(supplyVisible.concat([player.id]));
-                  else
-                    setSupplyVisible(
-                      supplyVisible.filter((id) => id !== player.id)
+                  if (e.target.checked) {
+                    const newSupply = supplyVisible.concat([player.id]);
+                    setSupplyVisible(newSupply);
+                    localStorage.setItem(
+                      "supplyVisible",
+                      JSON.stringify(newSupply)
                     );
+                  } else {
+                    const newSupply = supplyVisible.filter(
+                      (id) => id !== player.id
+                    );
+                    setSupplyVisible(newSupply);
+                    localStorage.setItem(
+                      "supplyVisible",
+                      JSON.stringify(newSupply)
+                    );
+                  }
                 }}
               ></input>
               <span
