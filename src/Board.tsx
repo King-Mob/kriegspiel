@@ -587,15 +587,13 @@ export const Board = ({
   function overAllUnits(belong: P_ID) {
     return spanBGColor(
       <>
-        {objTypeList
-          .filter((obj) => obj !== "Cavalry_Wolf")
-          .map((type) => {
-            const num = Game.filterCId(
-              G.cells,
-              (obj) => obj.typeName === type && obj.belong === belong
-            ).length;
-            return Game.objDataList[type].objRender + num;
-          })}
+        {objTypeList.map((type) => {
+          const num = Game.filterCId(
+            G.cells,
+            (obj) => obj.typeName === type && obj.belong === belong
+          ).length;
+          return Game.objDataList[type].objRender + num;
+        })}
       </>,
       fictionColor(belong)
     );
