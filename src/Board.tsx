@@ -781,7 +781,7 @@ export const Board = ({
             return (
               <>
                 {" "}
-                at {pos.x + 1}
+                at {pos.x + 1} | {id}
                 {String.fromCharCode(65 + pos.y)}:{" "}
                 {obj && (
                   <>
