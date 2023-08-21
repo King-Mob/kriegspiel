@@ -476,7 +476,7 @@ export function loadGame(fen: string, ctx: Ctx): GameState {
       2: null,
       3: null,
       4: null,
-      5: [840, “Arsenal”],
+      5: [840, "Arsenal"],
       6: null,
       7: [1342,{
           belong: "5",
