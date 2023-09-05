@@ -491,6 +491,7 @@ supplied: true,
 typeName: "Swift_Artillery"
       }],
       7: [1535,  {
+        belong: "5",
           canAddDef: false,
 defense: 5,
 objRender: "🏇",
