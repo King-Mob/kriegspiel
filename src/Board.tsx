@@ -19,6 +19,7 @@ import {
   getDirSuppliedLines,
   getSuppliedCells,
   exportGame,
+  turns,
 } from "./Game";
 
 import { useGesture } from "@use-gesture/react";
@@ -49,6 +50,7 @@ export const Board = ({
   const [supplyVisible, setSupplyVisible] = useState<P_ID[]>(
     localSupply || ["0", "1", "2", "3", "4", "5", "6", "7"]
   );
+  const [turnNumber, setTurnNumber] = useState(turns.length - 1);
 
   function pickedData(pId: CellID | null) {
     if (pId !== null && canPick(G, ctx, pId) && isActive) {
@@ -1049,6 +1051,42 @@ export const Board = ({
             backgroundColor: `${pico8Palette.white}`,
           }}
         >
+          {editMode && (
+            <div
+              style={{
+                padding: "5px 0px",
+                width: "100%",
+                display: "flex",
+                flexDirection: "row",
+                justifyContent: "center",
+              }}
+            >
+              <button
+                onClick={() => {
+                  const newTurnNumber = turnNumber - 1;
+                  if (turnNumber > 0) {
+                    setTurnNumber(newTurnNumber);
+                    moves.load(turns[newTurnNumber]);
+                  }
+                }}
+              >
+                back
+              </button>
+              <span style={{ margin: "0px 10px" }}>Turn: {turnNumber}</span>
+              <button
+                onClick={() => {
+                  const newTurnNumber = turnNumber + 1;
+                  if (turnNumber < turns.length - 1) {
+                    setTurnNumber(newTurnNumber);
+                    moves.load(turns[newTurnNumber]);
+                  }
+                }}
+              >
+                forward
+              </button>
+            </div>
+          )}
+
           {editMode ? sideBarEdit : sideBarPlay}
 
           <p>
