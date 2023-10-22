@@ -507,7 +507,7 @@ export function loadGame(fen: string, ctx: Ctx): GameState {
       ],
     },
     attackRecords: {
-      0: [955, "Arsenal"],
+      0: null,
       1: null,
       2: null,
       3: [
