@@ -439,10 +439,10 @@ export function loadGame(fen: string, ctx: Ctx): GameState {
       { id: "7", name: "House of Haltwhistle" },
     ],
     alliances: {
-      "0": ["2", "5"],
+      "0": ["2", "5", "3"],
       "1": ["3"],
       "2": ["0", "4", "7"],
-      "3": ["1", "5"],
+      "3": ["1", "5", "0"],
       "4": ["2", "5"],
       "5": ["4", "0", "3"],
       "6": ["7"],
