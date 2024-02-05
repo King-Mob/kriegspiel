@@ -602,19 +602,19 @@ export const Board = ({
   }
   console.log(G, ctx);
   console.log(G.attackRecords, G.moveRecords);
-  const moveRecordStrings: string[] = [];
+  let moveRecordString: string = "";
 
   Object.keys(G.moveRecords).forEach((playerId) => {
     const move = G.moveRecords[playerId as P_ID];
-    let moveRecordString = "[";
-    move.forEach((unitMove) => {
-      moveRecordString += `[${unitMove[0]},${unitMove[1]}],`;
+    moveRecordString += playerId + ": [";
+    move.forEach((unitMove, i) => {
+      if (i > 0) moveRecordString += ",";
+      moveRecordString += `[${unitMove[0]},${unitMove[1]}]`;
     });
-    moveRecordString += "]";
-    moveRecordStrings.push(moveRecordString);
+    moveRecordString += "],\n";
   });
 
-  console.log(moveRecordStrings);
+  console.log(moveRecordString);
 
   const sideBarPlay = (
     <div id="PlayUI">
