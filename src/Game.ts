@@ -431,7 +431,7 @@ export function loadGame(fen: string, ctx: Ctx): GameState {
     players: [
       { id: "0", name: "Count Guibert" },
       { id: "1", name: "Umbrella Corps" },
-      { id: "2", name: "Southern Snowcones" },
+      { id: "2", name: "Optimistic Nihilists" },
       { id: "3", name: "Ragnar the Fearless" },
       { id: "4", name: "The Rabble" },
       { id: "5", name: "The Eyeballs" },
