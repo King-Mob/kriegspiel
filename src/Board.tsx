@@ -1228,7 +1228,7 @@ const pico8Palette = {
   brown: "#ab5236",
   purple: "#cf04ba",
   dark_grey: "#5f574f",
-  balanced_grey: "#535353",
+  balanced_grey: "#939393",
   light_grey: "#c2c3c7",
   very_light_grey: "#e3e3e3",
   white: "#fff1e8",
