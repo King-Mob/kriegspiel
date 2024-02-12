@@ -397,7 +397,7 @@ export const Board = ({
           drawLine(st, ed, pico8Palette.brown, 0.5, "0.3, 0.1")
         )}
         {G.moveRecords["2"].map(([st, ed]) =>
-          drawLine(st, ed, pico8Palette.dark_yellow, 0.5, "0.3, 0.1")
+          drawLine(st, ed, pico8Palette.balanced_grey, 0.5, "0.3, 0.1")
         )}
         {G.moveRecords["3"].map(([st, ed]) =>
           drawLine(st, ed, pico8Palette.dark_green, 0.5, "0.3, 0.1")
@@ -1205,7 +1205,7 @@ function fictionColor(pID: P_ID) {
     case "1":
       return pico8Palette.red;
     case "2":
-      return pico8Palette.dark_yellow;
+      return pico8Palette.balanced_grey;
     case "3":
       return pico8Palette.green;
     case "4":
@@ -1228,6 +1228,7 @@ const pico8Palette = {
   brown: "#ab5236",
   purple: "#cf04ba",
   dark_grey: "#5f574f",
+  balanced_grey: "#535353",
   light_grey: "#c2c3c7",
   very_light_grey: "#e3e3e3",
   white: "#fff1e8",
