@@ -990,7 +990,11 @@ function moveRange(G: GameState, stCId: CellID, speed: number = 1): CellID[] {
 
   return possibleMove
     .map((id) => {
-      if (G.cells[id] === null && G.places[id]?.placeType !== "Mountain")
+      if (
+        G.cells[id] === null &&
+        G.places[id]?.placeType !== "Mountain" &&
+        G.places[id]?.placeType !== "Ice"
+      )
         return id;
       else return null;
     })
@@ -1103,7 +1107,9 @@ export function fireRange(G: GameState, CId: CellID, range: number): CellID[] {
     searchInMiShape(
       G,
       CId,
-      (obj, id) => G.places[id]?.placeType !== "Mountain",
+      (obj, id) =>
+        G.places[id]?.placeType !== "Mountain" &&
+        G.places[id]?.placeType !== "Ice",
       0,
       range
     )[0].flat()
@@ -1194,14 +1200,16 @@ export function dirSupplyFrom(G: GameState, CId: CellID, player: P_ID) {
     (obj, id) =>
       //filter the objs block the supply lines
       //obj is enemy, has offense factor, is supplied, not retreat
-      //and mountains also block
+      //and mountains and ice also block
       !(
         obj &&
         obj.belong !== player &&
         !G.alliances[player].includes(obj.belong) &&
         obj.offense > 0 &&
         obj.supplied
-      ) && G.places[id]?.placeType !== "Mountain"
+      ) &&
+      G.places[id]?.placeType !== "Mountain" &&
+      G.places[id]?.placeType !== "Ice"
   );
   return result[0];
 }
