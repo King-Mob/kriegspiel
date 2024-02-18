@@ -649,7 +649,7 @@ function decodeStrong(s: string): Stronghold | null {
         return newStronghold("Pass", be);
       case "⛰️":
         return newStronghold("Mountain", be);
-      case "🧊":
+      case "❄️":
         return newStronghold("Ice", be);
       default:
         return null;
@@ -1414,6 +1414,6 @@ export function renderPlaceByType(t: StrongholdType): [string, number] {
     case "Mountain":
       return ["⛰️", 0];
     case "Ice":
-      return ["🧊", 0];
+      return ["❄️", 0];
   }
 }
