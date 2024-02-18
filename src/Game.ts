@@ -649,6 +649,8 @@ function decodeStrong(s: string): Stronghold | null {
         return newStronghold("Pass", be);
       case "⛰️":
         return newStronghold("Mountain", be);
+      case "🧊":
+        return newStronghold("Ice", be);
       default:
         return null;
     }
@@ -1373,12 +1375,13 @@ export function newPiece(type: ObjType, be: P_ID): ObjInstance {
   };
 }
 
-type StrongholdType = "Arsenal" | "Fortress" | "Pass" | "Mountain";
+type StrongholdType = "Arsenal" | "Fortress" | "Pass" | "Mountain" | "Ice";
 export const strongholdTypeList: readonly StrongholdType[] = [
   "Arsenal",
   "Fortress",
   "Pass",
   "Mountain",
+  "Ice",
 ];
 interface Stronghold {
   readonly placeType: StrongholdType;
@@ -1410,5 +1413,7 @@ export function renderPlaceByType(t: StrongholdType): [string, number] {
       return ["🏰", 4];
     case "Mountain":
       return ["⛰️", 0];
+    case "Ice":
+      return ["🧊", 0];
   }
 }
