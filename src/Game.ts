@@ -567,7 +567,7 @@ export function loadGame(fen: string, ctx: Ctx): GameState {
     },
     forcedRetreat: {
       0: [null, null],
-      1: [null, null],
+      1: [1561, null],
       2: [null, null],
       3: [null, null],
       4: [null, null],
