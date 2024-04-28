@@ -904,61 +904,13 @@ function cellFromXYDiff(x: number, y: number, stCId: CellID) {
 function moveRange(G: GameState, stCId: CellID, speed: number = 1): CellID[] {
   const reachableSquares = [];
 
-  if (speed === 0) {
-    reachableSquares.push(stCId);
+  for (let i = speed; i >= -speed; i--) {
+    for (let j = speed; j >= -speed; j--) {
+      reachableSquares.push(cellFromXYDiff(i, j, stCId));
+    }
   }
 
-  if (speed === 1) {
-    reachableSquares.push(
-      ...[
-        cellFromXYDiff(-1, -1, stCId),
-        cellFromXYDiff(0, -1, stCId),
-        cellFromXYDiff(1, -1, stCId),
-        cellFromXYDiff(-1, 0, stCId),
-        cellFromXYDiff(0, 0, stCId),
-        cellFromXYDiff(1, 0, stCId),
-        cellFromXYDiff(-1, 1, stCId),
-        cellFromXYDiff(0, 1, stCId),
-        cellFromXYDiff(1, 1, stCId),
-      ]
-    );
-  }
-
-  if (speed === 2) {
-    reachableSquares.push(
-      ...[
-        cellFromXYDiff(-2, -2, stCId),
-        cellFromXYDiff(-1, -2, stCId),
-        cellFromXYDiff(0, -2, stCId),
-        cellFromXYDiff(1, -2, stCId),
-        cellFromXYDiff(2, -2, stCId),
-        cellFromXYDiff(-2, -1, stCId),
-        cellFromXYDiff(-1, -1, stCId),
-        cellFromXYDiff(0, -1, stCId),
-        cellFromXYDiff(1, -1, stCId),
-        cellFromXYDiff(2, -1, stCId),
-        cellFromXYDiff(-2, 0, stCId),
-        cellFromXYDiff(-1, 0, stCId),
-        cellFromXYDiff(0, 0, stCId),
-        cellFromXYDiff(1, 0, stCId),
-        cellFromXYDiff(2, 0, stCId),
-        cellFromXYDiff(-2, 1, stCId),
-        cellFromXYDiff(-1, 1, stCId),
-        cellFromXYDiff(0, 1, stCId),
-        cellFromXYDiff(1, 1, stCId),
-        cellFromXYDiff(2, 1, stCId),
-        cellFromXYDiff(-2, 2, stCId),
-        cellFromXYDiff(-1, 2, stCId),
-        cellFromXYDiff(0, 2, stCId),
-        cellFromXYDiff(1, 2, stCId),
-        cellFromXYDiff(2, 2, stCId),
-      ]
-    );
-  }
-
-  const possibleMove = reachableSquares.filter((cell) => cell >= 0);
-
-  return possibleMove
+  return reachableSquares
     .map((id) => {
       if (
         G.cells[id] === null &&
