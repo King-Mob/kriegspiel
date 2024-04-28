@@ -877,6 +877,30 @@ export function canPut(G: GameState, ctx: Ctx, stCId: CellID, edCId: CellID) {
   //check obj is on stCells,  in move range
   return obj !== null && moveRange(G, stCId, obj.speed).includes(edCId);
 }
+
+function cellFromXYDiff(x: number, y: number, stCId: CellID) {
+  const cellX = stCId % BoardSize.mx;
+  const cellY = Math.floor(stCId / BoardSize.mx);
+
+  const newCellX = cellX + x;
+  const newCellY = cellY + y;
+
+  const newCellId =
+    (newCellY < 0
+      ? newCellY + BoardSize.my
+      : newCellY >= BoardSize.my
+      ? newCellY % BoardSize.my
+      : newCellY) *
+      BoardSize.mx +
+    (newCellX < 0
+      ? newCellX + BoardSize.mx
+      : newCellX >= BoardSize.mx
+      ? newCellX % BoardSize.mx
+      : newCellX);
+
+  return newCellId;
+}
+
 function moveRange(G: GameState, stCId: CellID, speed: number = 1): CellID[] {
   const reachableSquares = [];
 
@@ -887,15 +911,15 @@ function moveRange(G: GameState, stCId: CellID, speed: number = 1): CellID[] {
   if (speed === 1) {
     reachableSquares.push(
       ...[
-        stCId - 51,
-        stCId - 50,
-        stCId - 49,
-        stCId - 1,
-        stCId,
-        stCId + 1,
-        stCId + 49,
-        stCId + 50,
-        stCId + 51,
+        cellFromXYDiff(-1, -1, stCId),
+        cellFromXYDiff(0, -1, stCId),
+        cellFromXYDiff(1, -1, stCId),
+        cellFromXYDiff(-1, 0, stCId),
+        cellFromXYDiff(0, 0, stCId),
+        cellFromXYDiff(1, 0, stCId),
+        cellFromXYDiff(-1, 1, stCId),
+        cellFromXYDiff(0, 1, stCId),
+        cellFromXYDiff(1, 1, stCId),
       ]
     );
   }
@@ -903,31 +927,31 @@ function moveRange(G: GameState, stCId: CellID, speed: number = 1): CellID[] {
   if (speed === 2) {
     reachableSquares.push(
       ...[
-        stCId - 102,
-        stCId - 101,
-        stCId - 100,
-        stCId - 99,
-        stCId - 98,
-        stCId - 52,
-        stCId - 51,
-        stCId - 50,
-        stCId - 49,
-        stCId - 48,
-        stCId - 2,
-        stCId - 1,
-        stCId,
-        stCId + 1,
-        stCId + 2,
-        stCId + 48,
-        stCId + 49,
-        stCId + 50,
-        stCId + 51,
-        stCId + 52,
-        stCId + 98,
-        stCId + 99,
-        stCId + 100,
-        stCId + 101,
-        stCId + 102,
+        cellFromXYDiff(-2, -2, stCId),
+        cellFromXYDiff(-1, -2, stCId),
+        cellFromXYDiff(0, -2, stCId),
+        cellFromXYDiff(1, -2, stCId),
+        cellFromXYDiff(2, -2, stCId),
+        cellFromXYDiff(-2, -1, stCId),
+        cellFromXYDiff(-1, -1, stCId),
+        cellFromXYDiff(0, -1, stCId),
+        cellFromXYDiff(1, -1, stCId),
+        cellFromXYDiff(2, -1, stCId),
+        cellFromXYDiff(-2, 0, stCId),
+        cellFromXYDiff(-1, 0, stCId),
+        cellFromXYDiff(0, 0, stCId),
+        cellFromXYDiff(1, 0, stCId),
+        cellFromXYDiff(2, 0, stCId),
+        cellFromXYDiff(-2, 1, stCId),
+        cellFromXYDiff(-1, 1, stCId),
+        cellFromXYDiff(0, 1, stCId),
+        cellFromXYDiff(1, 1, stCId),
+        cellFromXYDiff(2, 1, stCId),
+        cellFromXYDiff(-2, 2, stCId),
+        cellFromXYDiff(-1, 2, stCId),
+        cellFromXYDiff(0, 2, stCId),
+        cellFromXYDiff(1, 2, stCId),
+        cellFromXYDiff(2, 2, stCId),
       ]
     );
   }
